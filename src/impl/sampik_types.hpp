@@ -1,0 +1,70 @@
+/**
+ * Copyright (C) 2024, CEA/DAM
+ *
+ * Licensed under the MIT License ("the License" hereafter);
+ * You may not use this file except in compliance with the License.
+ * You should have received a full copy of the License along with this program;
+ * if not, you can obtain a copy at:
+ *
+ *    https://opensource.org/license/MIT
+ *
+ * The software is provided “as is”, without warranty of any kind, express
+ * or implied, including but not limited to the warranties of merchantability,
+ * fitness for a particular purpose and noninfringement. In no event shall
+ * the authors or copyright holders be liable for any claim, damages or other
+ * liability, whether in an action of contract, tort or otherwise, arising from,
+ * out of or in connection with the software or the use or other dealings
+ * in the software.
+ *
+ * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
+ **/
+
+#pragma once
+
+#include <mpi.h>
+
+#include <cstdint>
+#include <type_traits>
+
+namespace Sampik::Impl {
+
+template <typename T>
+inline auto mpi_type() -> MPI_Datatype {
+    static_assert(std::is_void_v<T>, "unimplemented MPI type");
+    return MPI_DATATYPE_NULL;
+}
+
+template <typename T>
+inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, int32_t>, MPI_Datatype> {
+    return MPI_INT;
+}
+
+template <typename T>
+inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, int64_t>, MPI_Datatype> {
+    return MPI_LONG_LONG;
+}
+
+template <typename T>
+inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, uint32_t>, MPI_Datatype> {
+    return MPI_UNSIGNED;
+}
+
+template <typename T>
+inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, uint64_t>, MPI_Datatype> {
+    return MPI_UNSIGNED_LONG_LONG;
+}
+
+template <typename T>
+inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, float>, MPI_Datatype> {
+    return MPI_FLOAT;
+}
+
+template <typename T>
+inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, double>, MPI_Datatype> {
+    return MPI_DOUBLE;
+}
+
+template <typename T>
+inline MPI_Datatype mpi_type_v = mpi_type<T>();
+
+} // namespace Sampik::Impl
