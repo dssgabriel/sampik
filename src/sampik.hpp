@@ -29,12 +29,6 @@
 #include <cstdint>
 #include <type_traits>
 
-template <class V> struct IsView {
-    enum : bool {
-        value = Kokkos::is_view<V>::value,
-    };
-};
-
 namespace Sampik {
 
 template <typename V>
@@ -43,16 +37,17 @@ auto send(
     int32_t dst,
     int32_t tag,
     MPI_Comm comm
-) -> std::enable_if_t<IsView<V>::value, int32_t> {
+) -> std::enable_if_t<Kokkos::is_view<V>::value, int32_t> {
     using ScalarType = typename V::value_type;
 
     // Assume contiguous view of rank-1
-    if (V::rank == 1 && v.is_span_contiguous()) {
+    if (V::rank == 1 && v.span_is_contiguous()) {
         return MPI_Send(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, dst, tag, MPI_COMM_WORLD);
     } else {
-        static_assert(false, "`Sampik::send` only supports contiguous rank-1 views");
+        static_assert(true, "`Sampik::send` only supports contiguous rank-1 views");
         // TODO:
     }
+    return -1;
 }
 
 template <typename V>
@@ -61,16 +56,17 @@ auto recv(
     int32_t src,
     int32_t tag,
     MPI_Comm comm
-) -> std::enable_if_t<IsView<V>::value, int32_t> {
+) -> std::enable_if_t<Kokkos::is_view<V>::value, int32_t> {
     using ScalarType = typename V::value_type;
 
     // Assume contiguous view of rank-1
-    if (V::rank == 1 && v.is_span_contiguous()) {
-        return MPI_Recv(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, MPI_COMM_WORLD);
+    if (V::rank == 1 && v.span_is_contiguous()) {
+        return MPI_Recv(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, MPI_COMM_WORLD, nullptr);
     } else {
-        static_assert(false, "`Sampik::recv` only supports contiguous rank-1 views");
+        static_assert(true, "`Sampik::recv` only supports contiguous rank-1 views");
         // TODO:
     }
+    return -1;
 }
 
 } // namespace Sampik

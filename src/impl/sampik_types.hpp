@@ -34,33 +34,43 @@ inline auto mpi_type() -> MPI_Datatype {
     return MPI_DATATYPE_NULL;
 }
 
-template <typename T>
-inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, int32_t>, MPI_Datatype> {
-    return MPI_INT;
+template <>
+inline auto mpi_type<int8_t>() -> MPI_Datatype {
+    return MPI_INT8_T;
 }
 
-template <typename T>
-inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, int64_t>, MPI_Datatype> {
-    return MPI_LONG_LONG;
+template <>
+inline auto mpi_type<uint8_t>() -> MPI_Datatype {
+    return MPI_UINT8_T;
 }
 
-template <typename T>
-inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, uint32_t>, MPI_Datatype> {
-    return MPI_UNSIGNED;
+template <>
+inline auto mpi_type<int32_t>() -> MPI_Datatype {
+    return MPI_INT32_T;
 }
 
-template <typename T>
-inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, uint64_t>, MPI_Datatype> {
-    return MPI_UNSIGNED_LONG_LONG;
+template <>
+inline auto mpi_type<int64_t>() -> MPI_Datatype {
+    return MPI_INT64_T;
 }
 
-template <typename T>
-inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, float>, MPI_Datatype> {
+template <>
+inline auto mpi_type<uint32_t>() -> MPI_Datatype {
+    return MPI_UINT32_T;
+}
+
+template <>
+inline auto mpi_type<uint64_t>() -> MPI_Datatype {
+    return MPI_UINT64_T;
+}
+
+template <>
+inline auto mpi_type<float>() -> MPI_Datatype {
     return MPI_FLOAT;
 }
 
-template <typename T>
-inline auto mpi_type() -> std::enable_if_t<std::is_same_v<T, double>, MPI_Datatype> {
+template <>
+inline auto mpi_type<double>() -> MPI_Datatype {
     return MPI_DOUBLE;
 }
 

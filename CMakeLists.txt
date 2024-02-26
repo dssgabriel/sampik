@@ -20,11 +20,14 @@
 cmake_minimum_required(VERSION 3.16)
 project(sampik
     LANGUAGES CXX
-    DESCRIPTION "Synergistic API for MPI + Kokkos"
+    DESCRIPTION "Synergistic API for MPI + Kokkos interoperability"
 )
 
 set(CMAKE_COLOR_DIAGNOSTICS ON)
-set(CMAKE_CXX_COMPILER clang++)
 set(CMAKE_CXX_STANDARD 17)
 
-find_package(Kokkos REQUIRED)
+find_package(MPI REQUIRED)
+
+add_subdirectory(ext/kokkos)
+add_subdirectory(src)
+add_subdirectory(test)
