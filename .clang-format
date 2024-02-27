@@ -8,3 +8,4 @@ ContinuationIndentWidth: 4
 PointerAlignment: Left
 QualifierAlignment: Right
 AlignAfterOpenBracket: BlockIndent
+BinPackArguments: false
