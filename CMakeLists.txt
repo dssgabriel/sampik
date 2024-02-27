@@ -26,6 +26,10 @@ project(sampik
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 set(CMAKE_CXX_STANDARD 17)
 
+if(CMAKE_BUILD_TYPE EQUAL Debug)
+    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -fanalyzer)
+endif()
+
 find_package(MPI REQUIRED)
 
 add_subdirectory(ext/kokkos)
