@@ -31,42 +31,44 @@
 
 namespace Sampik {
 
+/// Send a `Kokkos::View` through MPI.
+/// Assumptions:
+/// - View is on the `HostSpace` memory space
+/// - View is contiguous
+/// - View's `value_type` is an MPI-defined datatype
 template <typename V>
-auto send(
-    V const& v,
-    int32_t dst,
-    int32_t tag,
-    MPI_Comm comm
-) -> std::enable_if_t<Kokkos::is_view<V>::value, int32_t> {
+auto send(V const& v, int32_t dst, int32_t tag, MPI_Comm comm) -> std::enable_if_t<
+    Kokkos::is_view<V>::value && std::is_same_v<typename V::memory_space, Kokkos::HostSpace>,
+    int32_t
+> {
     using ScalarType = typename V::value_type;
 
-    // Assume contiguous view
     if (v.span_is_contiguous()) {
         return MPI_Send(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, dst, tag, comm);
-    } else {
+    } else { // TODO:
         assert(v.span_is_contiguous() && "`Sampik::send` only supports contiguous views");
-        // TODO:
+        return -1; // unreachable
     }
-    return -1;
 }
 
+/// Receive a `Kokkos::View` through MPI.
+/// Assumptions:
+/// - View is on the `HostSpace` memory space
+/// - View is contiguous
+/// - View's `value_type` is an MPI-defined datatype
 template <typename V>
-auto recv(
-    V const& v,
-    int32_t src,
-    int32_t tag,
-    MPI_Comm comm
-) -> std::enable_if_t<Kokkos::is_view<V>::value, int32_t> {
+auto recv(V const& v, int32_t src, int32_t tag, MPI_Comm comm) -> std::enable_if_t<
+    Kokkos::is_view<V>::value && std::is_same_v<typename V::memory_space, Kokkos::HostSpace>,
+    int32_t
+> {
     using ScalarType = typename V::value_type;
 
-    // Assume contiguous view
     if (v.span_is_contiguous()) {
-        return MPI_Recv(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, comm, nullptr);
-    } else {
+        return MPI_Recv(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, comm, MPI_STATUS_IGNORE);
+    } else { // TODO:
         assert(v.span_is_contiguous() && "`Sampik::recv` only supports contiguous views");
-        // TODO:
+        return -1; // unreachable
     }
-    return -1;
 }
 
 } // namespace Sampik
