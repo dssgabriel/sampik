@@ -35,13 +35,18 @@ inline auto mpi_type() -> MPI_Datatype {
 }
 
 template <>
+inline auto mpi_type<char>() -> MPI_Datatype {
+    return MPI_CHAR;
+}
+
+template <>
 inline auto mpi_type<int8_t>() -> MPI_Datatype {
     return MPI_INT8_T;
 }
 
 template <>
-inline auto mpi_type<uint8_t>() -> MPI_Datatype {
-    return MPI_UINT8_T;
+inline auto mpi_type<int16_t>() -> MPI_Datatype {
+    return MPI_INT16_T;
 }
 
 template <>
@@ -55,6 +60,21 @@ inline auto mpi_type<int64_t>() -> MPI_Datatype {
 }
 
 template <>
+inline auto mpi_type<long long signed int>() -> MPI_Datatype {
+    return MPI_LONG_LONG_INT;
+}
+
+template <>
+inline auto mpi_type<uint8_t>() -> MPI_Datatype {
+    return MPI_UINT8_T;
+}
+
+template <>
+inline auto mpi_type<uint16_t>() -> MPI_Datatype {
+    return MPI_UINT16_T;
+}
+
+template <>
 inline auto mpi_type<uint32_t>() -> MPI_Datatype {
     return MPI_UINT32_T;
 }
@@ -65,6 +85,11 @@ inline auto mpi_type<uint64_t>() -> MPI_Datatype {
 }
 
 template <>
+inline auto mpi_type<long long unsigned int>() -> MPI_Datatype {
+    return MPI_UNSIGNED_LONG_LONG;
+}
+
+template <>
 inline auto mpi_type<float>() -> MPI_Datatype {
     return MPI_FLOAT;
 }
@@ -72,6 +97,11 @@ inline auto mpi_type<float>() -> MPI_Datatype {
 template <>
 inline auto mpi_type<double>() -> MPI_Datatype {
     return MPI_DOUBLE;
+}
+
+template <>
+inline auto mpi_type<long double>() -> MPI_Datatype {
+    return MPI_LONG_DOUBLE;
 }
 
 template <typename T>
