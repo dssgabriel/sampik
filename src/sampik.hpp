@@ -40,11 +40,11 @@ auto send(
 ) -> std::enable_if_t<Kokkos::is_view<V>::value, int32_t> {
     using ScalarType = typename V::value_type;
 
-    // Assume contiguous view of rank-1
-    if (V::rank == 1 && v.span_is_contiguous()) {
-        return MPI_Send(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, dst, tag, MPI_COMM_WORLD);
+    // Assume contiguous view
+    if (v.span_is_contiguous()) {
+        return MPI_Send(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, dst, tag, comm);
     } else {
-        static_assert(true, "`Sampik::send` only supports contiguous rank-1 views");
+        assert(v.span_is_contiguous() && "`Sampik::send` only supports contiguous views");
         // TODO:
     }
     return -1;
@@ -59,11 +59,11 @@ auto recv(
 ) -> std::enable_if_t<Kokkos::is_view<V>::value, int32_t> {
     using ScalarType = typename V::value_type;
 
-    // Assume contiguous view of rank-1
-    if (V::rank == 1 && v.span_is_contiguous()) {
-        return MPI_Recv(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, MPI_COMM_WORLD, nullptr);
+    // Assume contiguous view
+    if (v.span_is_contiguous()) {
+        return MPI_Recv(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, comm, nullptr);
     } else {
-        static_assert(true, "`Sampik::recv` only supports contiguous rank-1 views");
+        assert(v.span_is_contiguous() && "`Sampik::recv` only supports contiguous views");
         // TODO:
     }
     return -1;
