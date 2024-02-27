@@ -22,88 +22,111 @@
 #include "../src/sampik.hpp"
 
 #include <Kokkos_Core.hpp>
-#include <fmt/core.h>
 #include <mpi.h>
 
 #include <cassert>
 #include <cstdint>
+#include <iostream>
 
-constexpr int64_t N = 1'000;
-constexpr int64_t M = 16;
+constexpr int64_t N = 65'536;
+constexpr int64_t M = 1'024;
+
+using ScalarType = double;
+using Layout = Kokkos::LayoutRight;
+using MemorySpace = Kokkos::HostSpace;
+using ViewType = Kokkos::View<ScalarType**, Layout, MemorySpace>;
 
 auto main(int32_t argc, char* argv[]) -> int32_t {
+    int32_t ret = 0;
+
     int32_t lvl_reqst = MPI_THREAD_MULTIPLE;
     int32_t lvl_avail;
     MPI_Init_thread(&argc, &argv, lvl_reqst, &lvl_avail);
+    assert(lvl_reqst == lvl_avail && "MPI Thread level request is not available");
+
+    int32_t rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    int32_t size;
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    if (size != 2) {
+        std::cerr << "world size must be 2 but is " << size << "\n";
+        return -1;
+    }
+
     Kokkos::initialize(argc, argv);
     {
-        int32_t rank;
-        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-        int32_t size;
-        MPI_Comm_size(MPI_COMM_WORLD, &size);
-        if (size != 2) {
-            fmt::print(stderr, "error: world size must be 2 but world is size: {}", size);
-            return -1;
-        }
-
-        Kokkos::View<double**, Kokkos::LayoutRight, Kokkos::HostSpace> v("v", N, M);
-        double res_local = 0.0;
-        double res_other;
+        ViewType v("v", N, M);
+        ScalarType res_local{};
+        ScalarType res_other{};
 
         if (rank == 0) {
-            // Initialize view to range from 0 to N
             Kokkos::parallel_for(
                 "init",
                 Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {N, M}),
-                KOKKOS_LAMBDA(int32_t i, int32_t j) { v(i, j) = 1.0; }
+                KOKKOS_LAMBDA(int64_t i, int64_t j) { v(i, j) = 1; }
             );
             // Send initialized view
             Sampik::send(v, 1, 0, MPI_COMM_WORLD);
 
-            // Perform a parallel reduction using Kokkos on the received view
+            // Perform a parallel reduction using Kokkos on the sent view
             Kokkos::parallel_reduce(
-                "reduce",
+                "reduce rank 0",
                 Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {N, M}),
-                KOKKOS_LAMBDA(int32_t j, int32_t i, double& tmp) { tmp += v(i, j); },
+                KOKKOS_LAMBDA(int64_t j, int64_t i, ScalarType & tmp) { tmp += v(i, j); },
                 res_local
             );
 
             // Receive result from rank 1
-            MPI_Recv(&res_other, 1, MPI_DOUBLE, 1, 1, MPI_COMM_WORLD, nullptr);
-            // Send local sum to rank 1
-            MPI_Send(&res_local, 1, MPI_DOUBLE, 1, 2, MPI_COMM_WORLD);
+            MPI_Recv(
+                &res_other,
+                1,
+                Sampik::Impl::mpi_type_v<ScalarType>,
+                1,
+                1,
+                MPI_COMM_WORLD,
+                MPI_STATUS_IGNORE
+            );
+            // Send local result to rank 1
+            MPI_Send(&res_local, 1, Sampik::Impl::mpi_type_v<ScalarType>, 1, 2, MPI_COMM_WORLD);
         } else {
             // Receive initialized view from rank 0
             Sampik::recv(v, 0, 0, MPI_COMM_WORLD);
 
             // Perform a parallel reduction using Kokkos on the received view
             Kokkos::parallel_reduce(
-                "reduce",
+                "reduce rank 1",
                 Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {N, M}),
-                KOKKOS_LAMBDA(int32_t j, int32_t i, double& tmp) { tmp += v(i, j); },
+                KOKKOS_LAMBDA(int64_t j, int64_t i, ScalarType & tmp) { tmp += v(i, j); },
                 res_local
             );
 
             // Send local reduction result to rank 0
-            MPI_Send(&res_local, 1, MPI_DOUBLE, 0, 1, MPI_COMM_WORLD);
+            MPI_Send(&res_local, 1, Sampik::Impl::mpi_type_v<ScalarType>, 0, 1, MPI_COMM_WORLD);
             // Receive result from rank 0
-            MPI_Recv(&res_other, 1, MPI_DOUBLE, 0, 2, MPI_COMM_WORLD, nullptr);
+            MPI_Recv(
+                &res_other,
+                1,
+                Sampik::Impl::mpi_type_v<ScalarType>,
+                0,
+                2,
+                MPI_COMM_WORLD,
+                MPI_STATUS_IGNORE
+            );
         }
 
-        // Assert correct result between ranks
-        assert(res_local == res_other);
+        // Check same result between ranks
         if (rank == 0) {
-            fmt::print(
-                "All ok!\n\tres from rank {}: {}\n\tres from rank {}: {}\n",
-                rank,
-                res_local,
-                (rank + 1) % size,
-                res_other
-            );
+            if (res_local == res_other) {
+                std::cout << "PASSED\n";
+                ret = 0;
+            } else {
+                std::cerr << "FAILED\n";
+                ret = 1;
+            }
         }
     }
     Kokkos::finalize();
     MPI_Finalize();
 
-    return 0;
+    return ret;
 }
