@@ -4,11 +4,11 @@
 
 SAMPIK is a simple work-in-progress API for enabling interoperability between Kokkos and MPI. It enables users to transparently distribute Kokkos views through MPI as if they were normal C-style buffers.
 
-### Support
+### Current support
 - Views must be contiguous (may be multi-dimensional)
 - Views must reside on the `HostSpace` memory space
 
-Planned features:
+### Planned features
 - Support non-contiguous views:
   - Pack/unpack?
   - Transfer in multiple communications?
