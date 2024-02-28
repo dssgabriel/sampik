@@ -19,7 +19,7 @@
  * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
  **/
 
-#include "../src/sampik.hpp"
+#include "sampik.hpp"
 
 #include <Kokkos_Core.hpp>
 #include <mpi.h>
