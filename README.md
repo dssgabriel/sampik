@@ -36,8 +36,8 @@ cmake --build build
 ### Run
 Run the test program:
 ```sh
-cmake --build build --target test_sendrecv
-mpirun -n 2 build/test/test_sendrecv
+cmake --build build --target send_recv
+mpirun -n 2 build/test/send_recv
 ```
 
 
