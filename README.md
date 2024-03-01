@@ -1,39 +1,50 @@
-# SAMPIK - Synergistic API for MPI + Kokkos interop
+# SAMPIK - Simple API for MPI + Kokkos
+
 
 ## About - WIP
 
-SAMPIK is a simple work-in-progress API for enabling interoperability between Kokkos and MPI. It enables users to transparently distribute Kokkos views through MPI as if they were normal C-style buffers.
+SAMPIK is a work-in-progress API for enabling interoperability between Kokkos and MPI. It enables users to transparently communicate Kokkos views using MPI.
 
-### Current support
-- Views must be contiguous (may be multi-dimensional)
+### Support features
+
+- Point-to-point communications:
+  - `send` and `receive` views
+
+Assumptions:
+- Views must be contiguous (but may be multi-dimensional)
 - Views must reside on the `HostSpace` memory space
 
 ### Planned features
+
 - Support non-contiguous views:
   - Pack/unpack?
   - Transfer in multiple communications?
-- Support any memory space: CUDA/GPU-aware MPI implementations? May use GPU-direct comms?
-- Add missing point-to-point communications
-- Add collectives (what would be the semantics for, e.g., `MPI_Reduce`?)
+- Support any memory space:
+  - CUDA/GPU-aware MPI implementations?
+  - May use GPUDirect comms?
+- Support collectives (what would be the semantics? e.g. `MPI_Reduce` on multi-dimensional views?)
 - Support for C++23 `mdspan`
 
 
 ## Quickstart
 
 ### Pre-requisites
+
 Before starting, make sure the following software is installed on your machine:
 - CMake 3.16+
 - C++17 conforming compiler
 - Kokkos (packaged as a submodule of this repo)
-- MPI implementation (assuming OpenMPI for now)
+- MPI implementation
 
 ### Build
+
 ```sh
 cmake -S . -B build <KOKKOS_FLAGS...>
 cmake --build build
 ```
 
 ### Run
+
 Run the test program:
 ```sh
 cmake --build build --target send_recv
