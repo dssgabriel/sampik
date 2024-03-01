@@ -37,11 +37,14 @@ namespace Sampik {
 /// - View is contiguous
 /// - View's `value_type` is an MPI-defined datatype
 template <typename V>
-auto send(V const& v, int32_t dst, int32_t tag, MPI_Comm comm) -> std::enable_if_t<
-    Kokkos::is_view<V>::value && std::is_same_v<typename V::memory_space, Kokkos::HostSpace>,
-    int32_t
-> {
+auto send(V const& v, int32_t dst, int32_t tag, MPI_Comm comm) -> int32_t {
     using ScalarType = typename V::value_type;
+
+    if constexpr (
+        !(Kokkos::is_view<V>::value && std::is_same_v<typename V::memory_space, Kokkos::HostSpace>)
+    ) {
+        static_assert(true, "`Sampik::send` only support Kokkos Views that are in `HostSpace`");
+    }
 
     if (v.span_is_contiguous()) {
         return MPI_Send(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, dst, tag, comm);
@@ -57,14 +60,19 @@ auto send(V const& v, int32_t dst, int32_t tag, MPI_Comm comm) -> std::enable_if
 /// - View is contiguous
 /// - View's `value_type` is an MPI-defined datatype
 template <typename V>
-auto recv(V const& v, int32_t src, int32_t tag, MPI_Comm comm) -> std::enable_if_t<
-    Kokkos::is_view<V>::value && std::is_same_v<typename V::memory_space, Kokkos::HostSpace>,
-    int32_t
-> {
+auto recv(V const& v, int32_t src, int32_t tag, MPI_Comm comm) -> int32_t {
     using ScalarType = typename V::value_type;
 
+    if constexpr (
+        !(Kokkos::is_view<V>::value && std::is_same_v<typename V::memory_space, Kokkos::HostSpace>)
+    ) {
+        static_assert(true, "`Sampik::recv` only support Kokkos Views that are in `HostSpace`");
+    }
+
     if (v.span_is_contiguous()) {
-        return MPI_Recv(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, comm, MPI_STATUS_IGNORE);
+        return MPI_Recv(
+            v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, comm, MPI_STATUS_IGNORE
+        );
     } else { // TODO:
         assert(v.span_is_contiguous() && "`Sampik::recv` only supports contiguous views");
         return -1; // unreachable

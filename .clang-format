@@ -9,3 +9,4 @@ PointerAlignment: Left
 QualifierAlignment: Right
 AlignAfterOpenBracket: BlockIndent
 BinPackArguments: false
+AlwaysBreakTemplateDeclarations: true
