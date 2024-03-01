@@ -17,25 +17,9 @@
 #
 # Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
 
-cmake_minimum_required(VERSION 3.16)
-project(sampik LANGUAGES CXX DESCRIPTION "SAMPIK: Simple API for MPI + Kokkos")
+set(SAMPIK_SOURCES core.hpp)
 
-set(CMAKE_COLOR_DIAGNOSTICS ON)
+add_library(sampik_core INTERFACE ${SAMPIK_SOURCES})
+target_link_libraries(sampik_core Kokkos::kokkos MPI:MPICXX)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 20)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  message(STATUS "setting C++ standard to C++${CMAKE_CXX_STANDARD}")
-endif()
-
-if(CMAKE_BUILD_TYPE EQUAL Debug)
-    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -fanalyzer)
-endif()
-
-set(TOP_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(SAMPIK_DIR "${TOP_DIR}/sampik")
-
-find_package(MPI REQUIRED)
-add_subdirectory(ext/kokkos)
-
-add_subdirectory(${SAMPIK_DIR})
+add_subdirectory(impl)
