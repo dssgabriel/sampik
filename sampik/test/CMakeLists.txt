@@ -18,4 +18,4 @@
 # Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
 
 add_executable(send_recv send_recv.test.cpp)
-target_link_libraries(send_recv sampik_core Kokkos::kokkos MPI::MPI_CXX)
+target_link_libraries(send_recv PRIVATE sampik Kokkos::kokkos MPI::MPI_CXX)

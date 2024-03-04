@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include "impl/types.hpp"
+#include <sampik/impl/types.hpp>
 
 #include <Kokkos_Core.hpp>
 #include <mpi.h>

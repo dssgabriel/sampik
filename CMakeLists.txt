@@ -32,10 +32,7 @@ if(CMAKE_BUILD_TYPE EQUAL Debug)
     add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -fanalyzer)
 endif()
 
-set(TOP_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(SAMPIK_DIR "${TOP_DIR}/sampik")
-
 find_package(MPI REQUIRED)
 add_subdirectory(ext/kokkos)
 
-add_subdirectory(${SAMPIK_DIR})
+add_subdirectory(sampik)

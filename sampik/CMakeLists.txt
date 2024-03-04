@@ -17,5 +17,8 @@
 #
 # Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
 
-add_subdirectory(sampik)
-add_subdirectory(impl)
+add_library(sampik INTERFACE)
+target_link_libraries(sampik INTERFACE Kokkos::kokkos MPI:MPICXX)
+target_include_directories(sampik INTERFACE .)
+
+add_subdirectory(test)
