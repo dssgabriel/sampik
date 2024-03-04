@@ -18,7 +18,7 @@
 # Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
 
 cmake_minimum_required(VERSION 3.16)
-project(src LANGUAGES CXX DESCRIPTION "SAMPIK: Simple API for MPI + Kokkos")
+project(sampik LANGUAGES CXX DESCRIPTION "SAMPIK: Simple API for MPI + Kokkos")
 
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 
