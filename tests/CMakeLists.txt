@@ -17,4 +17,7 @@
 #
 # Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
 
-target_sources(sampik_core PRIVATE types.hpp)
+add_executable(send_recv send_recv.test.cpp)
+target_link_libraries(send_recv PRIVATE sampik::sampik Kokkos::kokkos MPI::MPI_CXX)
+
+add_test(NAME send_recv COMMAND send_recv)

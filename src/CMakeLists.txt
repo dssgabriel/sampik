@@ -17,9 +17,27 @@
 #
 # Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
 
-set(SAMPIK_SOURCES core.hpp)
+add_library(sampik INTERFACE)
+target_link_libraries(sampik INTERFACE Kokkos::kokkos MPI:MPICXX)
+target_include_directories(sampik INTERFACE
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
-add_library(sampik_core INTERFACE ${SAMPIK_SOURCES})
-target_link_libraries(sampik_core Kokkos::kokkos MPI:MPICXX)
+add_library(sampik::sampik ALIAS sampik)
 
-add_subdirectory(impl)
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.h"
+)
+
+install(
+    TARGETS sampik
+    EXPORT sampik
+    ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+# add_subdirectory(unit_tests)

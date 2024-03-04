@@ -32,10 +32,15 @@ if(CMAKE_BUILD_TYPE EQUAL Debug)
     add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -fanalyzer)
 endif()
 
-set(TOP_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(SAMPIK_DIR "${TOP_DIR}/sampik")
+include(GNUInstallDirs)
 
 find_package(MPI REQUIRED)
 add_subdirectory(ext/kokkos)
 
-add_subdirectory(${SAMPIK_DIR})
+enable_testing()
+
+add_subdirectory(src)
+
+if (CMAKE_TESTING_ENABLED)
+    add_subdirectory(tests)
+endif()
