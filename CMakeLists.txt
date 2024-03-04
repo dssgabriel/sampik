@@ -37,4 +37,10 @@ include(GNUInstallDirs)
 find_package(MPI REQUIRED)
 add_subdirectory(ext/kokkos)
 
+enable_testing()
+
 add_subdirectory(src)
+
+if (CMAKE_TESTING_ENABLED)
+    add_subdirectory(tests)
+endif()

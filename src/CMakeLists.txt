@@ -40,4 +40,4 @@ install(
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 
-add_subdirectory(test)
+# add_subdirectory(unit_tests)

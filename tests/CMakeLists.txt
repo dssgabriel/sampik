@@ -19,3 +19,5 @@
 
 add_executable(send_recv send_recv.test.cpp)
 target_link_libraries(send_recv PRIVATE sampik::sampik Kokkos::kokkos MPI::MPI_CXX)
+
+add_test(NAME send_recv COMMAND send_recv)
