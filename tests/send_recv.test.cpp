@@ -19,9 +19,9 @@
  * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
  **/
 
-#include "sampik/sampik.hpp"
+#include <sampik/sampik.hpp>
 
-#include "Kokkos_Core.hpp"
+#include <Kokkos_Core.hpp>
 #include <mpi.h>
 
 #include <cassert>
