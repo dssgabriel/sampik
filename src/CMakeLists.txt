@@ -18,7 +18,7 @@
 # Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
 
 add_library(sampik INTERFACE)
-target_link_libraries(sampik INTERFACE Kokkos::kokkos MPI:MPICXX)
+target_link_libraries(sampik INTERFACE Kokkos::kokkos MPI::MPI_CXX)
 target_include_directories(sampik INTERFACE
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
