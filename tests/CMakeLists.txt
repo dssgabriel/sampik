@@ -17,27 +17,7 @@
 #
 # Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
 
-add_library(sampik INTERFACE)
-target_link_libraries(sampik INTERFACE Kokkos::kokkos MPI::MPI_CXX)
-target_include_directories(sampik INTERFACE
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+add_executable(send_recv send_recv.test.cpp)
+target_link_libraries(send_recv PRIVATE sampik::sampik Kokkos::kokkos MPI::MPI_CXX)
 
-add_library(sampik::sampik ALIAS sampik)
-
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.h"
-)
-
-install(
-    TARGETS sampik
-    EXPORT sampik
-    ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR}
-    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-
-# add_subdirectory(unit_tests)
+add_test(NAME send_recv COMMAND send_recv)

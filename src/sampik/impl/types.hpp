@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2024, CEA/DAM
+ * Copyright (C) 2024, CEA
  *
  * Licensed under the MIT License ("the License" hereafter);
  * You may not use this file except in compliance with the License.
@@ -27,84 +27,82 @@
 #include <type_traits>
 
 namespace Sampik::Impl {
-
 template <typename T>
 inline auto mpi_type() -> MPI_Datatype {
-    static_assert(std::is_void_v<T>, "unimplemented MPI type");
-    return MPI_DATATYPE_NULL;
+  static_assert(std::is_void_v<T>, "unimplemented MPI type");
+  return MPI_DATATYPE_NULL;
 }
 
 template <>
 inline auto mpi_type<char>() -> MPI_Datatype {
-    return MPI_CHAR;
+  return MPI_CHAR;
 }
 
 template <>
 inline auto mpi_type<int8_t>() -> MPI_Datatype {
-    return MPI_INT8_T;
+  return MPI_INT8_T;
 }
 
 template <>
 inline auto mpi_type<int16_t>() -> MPI_Datatype {
-    return MPI_INT16_T;
+  return MPI_INT16_T;
 }
 
 template <>
 inline auto mpi_type<int32_t>() -> MPI_Datatype {
-    return MPI_INT32_T;
+  return MPI_INT32_T;
 }
 
 template <>
 inline auto mpi_type<int64_t>() -> MPI_Datatype {
-    return MPI_INT64_T;
+  return MPI_INT64_T;
 }
 
 template <>
 inline auto mpi_type<long long signed int>() -> MPI_Datatype {
-    return MPI_LONG_LONG_INT;
+  return MPI_LONG_LONG_INT;
 }
 
 template <>
 inline auto mpi_type<uint8_t>() -> MPI_Datatype {
-    return MPI_UINT8_T;
+  return MPI_UINT8_T;
 }
 
 template <>
 inline auto mpi_type<uint16_t>() -> MPI_Datatype {
-    return MPI_UINT16_T;
+  return MPI_UINT16_T;
 }
 
 template <>
 inline auto mpi_type<uint32_t>() -> MPI_Datatype {
-    return MPI_UINT32_T;
+  return MPI_UINT32_T;
 }
 
 template <>
 inline auto mpi_type<uint64_t>() -> MPI_Datatype {
-    return MPI_UINT64_T;
+  return MPI_UINT64_T;
 }
 
 template <>
 inline auto mpi_type<long long unsigned int>() -> MPI_Datatype {
-    return MPI_UNSIGNED_LONG_LONG;
+  return MPI_UNSIGNED_LONG_LONG;
 }
 
 template <>
 inline auto mpi_type<float>() -> MPI_Datatype {
-    return MPI_FLOAT;
+  return MPI_FLOAT;
 }
 
 template <>
 inline auto mpi_type<double>() -> MPI_Datatype {
-    return MPI_DOUBLE;
+  return MPI_DOUBLE;
 }
 
 template <>
 inline auto mpi_type<long double>() -> MPI_Datatype {
-    return MPI_LONG_DOUBLE;
+  return MPI_LONG_DOUBLE;
 }
 
 template <typename T>
 inline MPI_Datatype mpi_type_v = mpi_type<T>();
-
 } // namespace Sampik::Impl

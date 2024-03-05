@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2024, CEA/DAM
+ * Copyright (C) 2024, CEA
  *
  * Licensed under the MIT License ("the License" hereafter);
  * You may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include "impl/sampik_types.hpp"
+#include <sampik/impl/types.hpp>
 
 #include <Kokkos_Core.hpp>
 #include <mpi.h>
@@ -30,28 +30,26 @@
 #include <type_traits>
 
 namespace Sampik {
-
 /// Send a `Kokkos::View` through MPI.
 /// Assumptions:
 /// - View is on the `HostSpace` memory space
 /// - View is contiguous
 /// - View's `value_type` is an MPI-defined datatype
-template <typename V>
-auto send(V const& v, int32_t dst, int32_t tag, MPI_Comm comm) -> int32_t {
-    using ScalarType = typename V::value_type;
+template <class SV, class... SP>
+auto send(Kokkos::View<SV, SP...> const& view, int32_t dst, int32_t tag, MPI_Comm comm) -> int32_t {
+  using ViewType = Kokkos::View<SV, SP...>;
+  using ScalarType = typename ViewType::value_type;
 
-    if constexpr (
-        !(Kokkos::is_view<V>::value && std::is_same_v<typename V::memory_space, Kokkos::HostSpace>)
-    ) {
-        static_assert(true, "`Sampik::send` only support Kokkos Views that are in `HostSpace`");
-    }
+  if constexpr (!std::is_same_v<typename ViewType::memory_space, Kokkos::HostSpace>) {
+    static_assert(false, "`Sampik::send` only supports views that are in `HostSpace`");
+  }
 
-    if (v.span_is_contiguous()) {
-        return MPI_Send(v.data(), v.span(), Impl::mpi_type_v<ScalarType>, dst, tag, comm);
-    } else { // TODO:
-        assert(v.span_is_contiguous() && "`Sampik::send` only supports contiguous views");
-        return -1; // unreachable
-    }
+  if (view.span_is_contiguous()) {
+    return MPI_Send(view.data(), view.span(), Impl::mpi_type_v<ScalarType>, dst, tag, comm);
+  } else { // TODO:
+    assert(false && "`Sampik::send` only supports contiguous views");
+    return -1; // unreachable
+  }
 }
 
 /// Receive a `Kokkos::View` through MPI.
@@ -61,22 +59,19 @@ auto send(V const& v, int32_t dst, int32_t tag, MPI_Comm comm) -> int32_t {
 /// - View's `value_type` is an MPI-defined datatype
 template <typename V>
 auto recv(V const& v, int32_t src, int32_t tag, MPI_Comm comm) -> int32_t {
-    using ScalarType = typename V::value_type;
+  using ScalarType = typename V::value_type;
 
-    if constexpr (
-        !(Kokkos::is_view<V>::value && std::is_same_v<typename V::memory_space, Kokkos::HostSpace>)
-    ) {
-        static_assert(true, "`Sampik::recv` only support Kokkos Views that are in `HostSpace`");
-    }
+  if constexpr (!std::is_same_v<typename V::memory_space, Kokkos::HostSpace>) {
+    static_assert(true, "`Sampik::recv` only support Kokkos Views that are in `HostSpace`");
+  }
 
-    if (v.span_is_contiguous()) {
-        return MPI_Recv(
-            v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, comm, MPI_STATUS_IGNORE
-        );
-    } else { // TODO:
-        assert(v.span_is_contiguous() && "`Sampik::recv` only supports contiguous views");
-        return -1; // unreachable
-    }
+  if (v.span_is_contiguous()) {
+    return MPI_Recv(
+      v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, comm, MPI_STATUS_IGNORE
+    );
+  } else { // TODO:
+    assert(v.span_is_contiguous() && "`Sampik::recv` only supports contiguous views");
+    return -1; // unreachable
+  }
 }
-
 } // namespace Sampik

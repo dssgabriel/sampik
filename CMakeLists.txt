@@ -1,4 +1,4 @@
-# Copyright (C) 2024, CEA/DAM
+# Copyright (C) 2024, CEA
 #
 # Licensed under the MIT License ("the License" hereafter);
 # You may not use this file except in compliance with the License.
@@ -18,20 +18,29 @@
 # Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
 
 cmake_minimum_required(VERSION 3.16)
-project(sampik
-    LANGUAGES CXX
-    DESCRIPTION "Synergistic API for MPI + Kokkos interoperability"
-)
+project(sampik LANGUAGES CXX DESCRIPTION "SAMPIK: Simple API for MPI + Kokkos")
 
 set(CMAKE_COLOR_DIAGNOSTICS ON)
-set(CMAKE_CXX_STANDARD 17)
+
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 20)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  message(STATUS "Setting C++ standard to C++${CMAKE_CXX_STANDARD}")
+endif()
 
 if(CMAKE_BUILD_TYPE EQUAL Debug)
     add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -fanalyzer)
 endif()
 
-find_package(MPI REQUIRED)
+include(GNUInstallDirs)
 
+find_package(MPI REQUIRED)
 add_subdirectory(ext/kokkos)
+
+enable_testing()
+
 add_subdirectory(src)
-add_subdirectory(test)
+
+if (CMAKE_TESTING_ENABLED)
+    add_subdirectory(tests)
+endif()
