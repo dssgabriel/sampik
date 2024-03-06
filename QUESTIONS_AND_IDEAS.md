@@ -52,7 +52,7 @@ How should we expose communication routines?
   int MPI_Ssend(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
   int MPI_Bsend(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm);
   int MPI_Recv(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status* status);
-  int MPI_Irecv(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Status* status, MPI_Request* req);
+  int MPI_Irecv(void* buf, int count, MPI_Datatype datatype, int dest, int tag, MPI_Comm comm, MPI_Request* req);
 
   template <class SV, class... SP>
   auto KokkosComms::ssend(Kokkos::View<SV, SP...> const& view, int dest, int tag, MPI_Comm comm) -> int;
@@ -61,7 +61,7 @@ How should we expose communication routines?
   template <class SV, class... SP>
   auto KokkosComms::recv(Kokkos::View<SV, SP...> const& view, int dest, int tag, MPI_Comm comm, MPI_Status& status) -> int;
   template <class SV, class... SP>
-  auto KokkosComms::irecv(Kokkos::View<SV, SP...> const& view, int dest, int tag, MPI_Comm comm, MPI_Status& status, MPI_Request& req) -> int;
+  auto KokkosComms::irecv(Kokkos::View<SV, SP...> const& view, int dest, int tag, MPI_Comm comm, MPI_Request& req) -> int;
   ```
 - Don't expose MPI types, use template parameters to specify behavior and specify at compile-time:
   ```cpp
@@ -88,8 +88,8 @@ How should we expose communication routines?
   template <class SV, class... SP>
   auto KokkosComms::recv(Kokkos::View<SV, SP...> const& view, int dest, int tag, KokkosComms::Communicator comm) -> KokkosComms::Request;
 
-  auto KokkosComms::wait(KokkosComms::Request& req) -> int;
-  auto KokkosComms::test(KokkosComms::Request& req) -> int;
+  auto KokkosComms::wait(KokkosComms::Request& req) -> KokkosComms::Status& sta;
+  auto KokkosComms::test(KokkosComms::Request& req) -> KokkosComms::Status& sta; //Flag is still missing
   // Implement something like `MPI_Waitsome`, `MPI_Testany`, etc?
   // auto KokkosComms::test_some(std::vector<KokkosComms::Request>& reqs) -> int;
   ```
