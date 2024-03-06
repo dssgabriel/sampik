@@ -41,7 +41,7 @@ auto send(Kokkos::View<SV, SP...> const& view, int32_t dst, int32_t tag, MPI_Com
   using ScalarType = typename ViewType::value_type;
 
   if constexpr (!std::is_same_v<typename ViewType::memory_space, Kokkos::HostSpace>) {
-    static_assert(false, "`Sampik::send` only supports views that are in `HostSpace`");
+    static_assert(std::is_same_v<typename ViewType::memory_space, Kokkos::HostSpace>, "`Sampik::send` only supports views that are in `HostSpace`");
   }
 
   if (view.span_is_contiguous()) {
@@ -62,7 +62,7 @@ auto recv(V const& v, int32_t src, int32_t tag, MPI_Comm comm) -> int32_t {
   using ScalarType = typename V::value_type;
 
   if constexpr (!std::is_same_v<typename V::memory_space, Kokkos::HostSpace>) {
-    static_assert(true, "`Sampik::recv` only support Kokkos Views that are in `HostSpace`");
+    static_assert(std::is_same_v<typename V::memory_space, Kokkos::HostSpace>, "`Sampik::recv` only support Kokkos Views that are in `HostSpace`");
   }
 
   if (v.span_is_contiguous()) {
