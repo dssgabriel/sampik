@@ -29,22 +29,11 @@
 #include <iostream>
 
 constexpr int64_t N = 65'536;
-constexpr int64_t M = 1'024;
 
 using ScalarType = double;
 using Layout = Kokkos::LayoutRight;
 using MemorySpace = Kokkos::HostSpace;
-using ViewType = Kokkos::View<ScalarType**, Layout, MemorySpace>;
-
-struct Functor {
-  ViewType v;
-  ScalarType& tmp;
-
-  Functor(ViewType _v, ScalarType& _tmp) : v(_v), tmp(_tmp) {}
-
-  KOKKOS_INLINE_FUNCTION
-  auto operator()(int const j, int const i) const -> void { tmp += v(i, j); }
-};
+using ViewType = Kokkos::View<ScalarType*, Layout, MemorySpace>;
 
 auto main(int argc, char* argv[]) -> int {
   int ret = 0;
@@ -65,7 +54,10 @@ auto main(int argc, char* argv[]) -> int {
 
   Kokkos::initialize(argc, argv);
   {
-    ViewType v("v", N, M);
+    // Create communicator for SAMPIK
+    Sampik::Communicator comm;
+
+    ViewType v("v", N);
     ScalarType res_local{};
     ScalarType res_other{};
 
@@ -73,21 +65,24 @@ auto main(int argc, char* argv[]) -> int {
       // Initialize view with all 1s
       Kokkos::parallel_for(
         "init",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {N, M}),
-        KOKKOS_LAMBDA(int const i, int const j) { v(i, j) = 1; }
+        N,
+        KOKKOS_LAMBDA(int const i) { v(i) = 1; }
       );
 
       // Send initialized view
-      Sampik::send(v, 1, 0, MPI_COMM_WORLD);
+      auto send_req = Sampik::send<0>(comm, v, 1);
 
       // Perform a parallel reduction using Kokkos on the sent view
       ScalarType tmp{};
       Kokkos::parallel_reduce(
         "reduce rank 0",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {N, M}),
-        KOKKOS_LAMBDA(int const i, int const j, ScalarType& tmp) { tmp += v(i, j); },
+        N,
+        KOKKOS_LAMBDA(int const i, ScalarType& tmp) { tmp += v(i); },
         res_local
       );
+
+      // Wait for send to finish
+      auto _ = Sampik::wait(send_req);
 
       // Receive result from rank 1
       MPI_Recv(
@@ -97,13 +92,14 @@ auto main(int argc, char* argv[]) -> int {
       MPI_Send(&res_local, 1, Sampik::Impl::mpi_type_v<ScalarType>, 1, 2, MPI_COMM_WORLD);
     } else {
       // Receive initialized view from rank 0
-      Sampik::recv(v, 0, 0, MPI_COMM_WORLD);
+      auto recv_req = Sampik::recv<0>(comm, v, 0);
+      auto _ = Sampik::wait(recv_req);
 
       // Perform a parallel reduction using Kokkos on the received view
       Kokkos::parallel_reduce(
         "reduce rank 1",
-        Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {N, M}),
-        KOKKOS_LAMBDA(int const i, int const j, ScalarType& tmp) { tmp += v(i, j); },
+        N,
+        KOKKOS_LAMBDA(int const i, ScalarType& tmp) { tmp += v(i); },
         res_local
       );
 
