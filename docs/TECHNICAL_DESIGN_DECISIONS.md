@@ -48,7 +48,7 @@ We want to steer away from a mere 1:1 wrapper of the MPI API (which includes way
 
 ### Non-blocking API
 
-Following Kokkos' approach, all communications initiated with SAMPIK have non-blocking/immediate semantics. This maps to non-blocking MPI functions (starting with `MPI_I*`). Other patterns that do not strictly follow the general "immediate" semantic can be optionnally opted-in using a template parameter (e.g. "bufferized", "synchronous", etc.).
+Following Kokkos' approach, all communications initiated with SAMPIK have non-blocking/immediate semantics. This maps to non-blocking MPI functions (starting with `MPI_I*`). Other patterns that do not strictly follow the general "immediate" semantic can be optionnally opted-in using a template parameter (e.g. "buffered", "synchronous", etc.).
 
 ### Request completion
 
