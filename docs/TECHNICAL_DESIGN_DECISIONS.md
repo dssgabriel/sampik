@@ -63,8 +63,9 @@ Calls from parallel regions are only allowed when in the `Kokkos::OpenMP` execut
 
 SAMPIK will provide `Sampik::matching_probe` and `Sampik::matching_recv`, similar to `MPI_Improbe` and `MPI_Imrecv` respectively, for knowing message sizes and creating views accordingly. This will allow "on-the-fly" view creation with correct dimensions using the explicit `Sampik::create_view_from_recv`.
 
+WIP.
 
-## Interoperability with unrelated uses
+### Interoperability with unrelated uses
 
 WIP.
 
@@ -75,62 +76,56 @@ WIP.
 
 Initialize SAMPIK:
 ```cpp
-auto Sampik::initialize() -> void
+auto Sampik::initialize() -> Sampik::ErrCode;
 ```
 Terminate SAMPIK:
 ```cpp
-auto Sampik::finalize() -> void
+auto Sampik::finalize() -> Sampik::ErrCode;
 ```
-Create a user-defined communicator:
+
+Create a SAMPIK communicator:
 ```cpp
-auto Sampik::create_communicator(...) -> Sampik::Communicator
+auto Sampik::create_communicator() -> Sampik::Communicator
 ```
-Probe for a matching request:
+
+Probe for a matching request (still WIP):
 ```cpp
-auto Sampik::matching_probe(...) -> ...
+template <Sampik::Tag tag>
+auto Sampik::matching_probe(Sampik::Communicator comm, int src, Sampik::Request& req) -> Sampik::Status;
+```
+
+Wait on a request:
+```cpp
+auto Sampik::wait(Sampik::Request& req) -> Sampik::Status;
+```
+
+Test a request:
+```cpp
+auto Sampik::test(Sampik::Request& req) -> std::optional<Sampik::Status>;
 ```
 
 ### Point-to-point (P2P)
 
 Sends a Kokkos view:
 ```cpp
-auto Sampik::send(Kokkos::View view, int rank) -> Sampik::Request
-```
-Sends a Kokkos view with a user-defined tag:
-```cpp
-auto Sampik::send(Kokkos::View view, int rank, int tag) -> Sampik::Request
-```
-Sends a Kokkos view through a user-defined SAMPIK communicator:
-```cpp
-auto Sampik::send(Kokkos::View view, int rank, Sampik::Communicator) -> Sampik::Request
-```
-Sends a Kokkos view with a specific tag:
-```cpp
-auto Sampik::send(Kokkos::View view, int rank, int tag, Sampik::Communicator) -> Sampik::Request
+template <Sampik::Tag tag, class SV, class... SP>
+auto Sampik::send(Sampik::Communicator comm, Kokkos::View view<SV, SP...>, int dst) -> Sampik::Request
 ```
 
 Receives a Kokkos view:
 ```cpp
-auto Sampik::recv(Kokkos::View view, int rank) -> Sampik::Request
+template <Sampik::Tag tag, class SV, class... SP>
+auto Sampik::recv(Sampik::Communicator comm, Kokkos::View<SV, SP...> view, int src) -> Sampik::Request
 ```
-Receives a Kokkos view with a user-defined tag:
+
+Receive a view from a previous request match (still WIP):
 ```cpp
-auto Sampik::recv(Kokkos::View view, int rank, int tag) -> Sampik::Request
-```
-Receives a Kokkos view through a user-defined SAMPIK communicator:
-```cpp
-auto Sampik::recv(Kokkos::View view, int rank, Sampik::Communicator) -> Sampik::Request
-```
-Receives a Kokkos view with a user-defined tag through a user-defined SAMPIK communicator:
-```cpp
-auto Sampik::recv(Kokkos::View view, int rank, int tag, Sampik::Communicator) -> Sampik::Request
-```
-Receive a view from a previous request match:
-```cpp
-auto Sampik::matching_recv(Kokkos::View view, int rank, ...) -> Sampik::Request
+template <Sampik::Tag tag, class SV, class... SP>
+auto Sampik::matching_recv(Sampik::Communicator comm, Kokkos::View view<SV, SP...>, int src) -> Sampik::Request
 ```
 
 Create a view from a previous request match and receive immediately (?):
 ```cpp
-auto Sampik::create_view_from_recv(int rank, ...) -> Kokkos::View
+template <Sampik::Tag tag>
+auto Sampik::create_view_from_recv(Sampik::Communicator comm, int src) -> Kokkos::View
 ```
