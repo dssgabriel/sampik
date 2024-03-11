@@ -26,52 +26,132 @@
 #include <Kokkos_Core.hpp>
 #include <mpi.h>
 
+#include <cassert>
 #include <cstdint>
 #include <type_traits>
 
 namespace Sampik {
+
+using Tag = int32_t;
+
+/// Sampik wrapper over MPI communicators.
+class Communicator {
+public:
+  Communicator() {
+    // TODO: implement logic for duplicating MPI_COMM_WORLD?
+    MPI_Comm_dup(MPI_COMM_WORLD, &m_comm);
+  }
+  ~Communicator() { MPI_Comm_free(&m_comm); }
+
+  auto get_inner_as_ptr() -> MPI_Comm* { return &m_comm; }
+
+private:
+  MPI_Comm m_comm;
+};
+
+/// SAMPIK wrapper over MPI statuses.
+class Status {
+public:
+  Status(MPI_Status sta) : m_sta(sta) {}
+  ~Status() = default;
+
+private:
+  MPI_Status m_sta;
+};
+
+/// SAMPIK wrapper over MPI requests.
+class Request {
+public:
+  Request(MPI_Request req) : m_req(req) {}
+  ~Request() = default;
+
+  auto get_inner_as_ptr() -> MPI_Request* { return &m_req; }
+
+private:
+  MPI_Request m_req;
+};
+
 /// Send a `Kokkos::View` through MPI.
+///
+/// This function is non-blocking.
 /// Assumptions:
-/// - View is on the `HostSpace` memory space
-/// - View is contiguous
-/// - View's `value_type` is an MPI-defined datatype
-template <class SV, class... SP>
-auto send(Kokkos::View<SV, SP...> const& view, int32_t dst, int32_t tag, MPI_Comm comm) -> int32_t {
+/// - View is rank-1 contiguous;
+/// - View's `value_type` is an MPI-defined datatype;
+template <Tag tag, class SV, class... SP>
+auto send(Communicator comm, Kokkos::View<SV, SP...> const& view, int32_t dst) -> Request {
   using ViewType = Kokkos::View<SV, SP...>;
   using ScalarType = typename ViewType::value_type;
 
-  if constexpr (!std::is_same_v<typename ViewType::memory_space, Kokkos::HostSpace>) {
-    static_assert(std::is_same_v<typename ViewType::memory_space, Kokkos::HostSpace>, "`Sampik::send` only supports views that are in `HostSpace`");
+#if defined(SAMPIK_GPU_AWARE_MPI)
+  if constexpr (ViewType::rank <= 1) {
+    if (view.span_is_contiguous()) {
+      // OK to call MPI directly because we guarantee that MPI is GPU aware.
+      MPI_Request req;
+      MPI_Isend(
+        view.data(),
+        view.span(),
+        Impl::mpi_type_v<ScalarType>,
+        dst,
+        tag,
+        *comm.get_inner_as_ptr(),
+        &req
+      );
+      return Request(req);
+    } else {
+      assert(false && "Sampik::send only supports contiguous views");
+      // TODO: make this portable
+      __builtin_unreachable();
+    }
+  } else {
+    static_assert(ViewType::Rank > 1, "Sampik::send only supports rank-1 views");
   }
-
-  if (view.span_is_contiguous()) {
-    return MPI_Send(view.data(), view.span(), Impl::mpi_type_v<ScalarType>, dst, tag, comm);
-  } else { // TODO:
-    assert(false && "`Sampik::send` only supports contiguous views");
-    return -1; // unreachable
-  }
+#else
+#error "MPI implementation must be GPU-aware"
+#endif
 }
 
 /// Receive a `Kokkos::View` through MPI.
+///
+/// This function is non-blocking.
 /// Assumptions:
-/// - View is on the `HostSpace` memory space
-/// - View is contiguous
+/// - View is rank-1 contiguous
 /// - View's `value_type` is an MPI-defined datatype
-template <typename V>
-auto recv(V const& v, int32_t src, int32_t tag, MPI_Comm comm) -> int32_t {
-  using ScalarType = typename V::value_type;
+template <Tag tag, class SV, class... SP>
+auto recv(Communicator comm, Kokkos::View<SV, SP...> const& view, int32_t src) -> Request {
+  using ViewType = Kokkos::View<SV, SP...>;
+  using ScalarType = typename ViewType::value_type;
 
-  if constexpr (!std::is_same_v<typename V::memory_space, Kokkos::HostSpace>) {
-    static_assert(std::is_same_v<typename V::memory_space, Kokkos::HostSpace>, "`Sampik::recv` only support Kokkos Views that are in `HostSpace`");
+#if defined(SAMPIK_GPU_AWARE_MPI)
+  if constexpr (ViewType::rank <= 1) {
+    if (view.span_is_contiguous()) {
+      // OK to call MPI directly because we guarantee that MPI is GPU aware.
+      MPI_Request req;
+      MPI_Irecv(
+        view.data(),
+        view.span(),
+        Impl::mpi_type_v<ScalarType>,
+        src,
+        tag,
+        *comm.get_inner_as_ptr(),
+        &req
+      );
+      return Request(req);
+    } else {
+      assert(false && "Sampik::recv only supports contiguous views");
+      // TODO: make this portable
+      __builtin_unreachable();
+    }
+  } else {
+    static_assert(ViewType::Rank > 1, "Sampik::recv only supports rank-1 views");
   }
+#else
+#error "MPI implementation must be GPU-aware"
+#endif
+}
 
-  if (v.span_is_contiguous()) {
-    return MPI_Recv(
-      v.data(), v.span(), Impl::mpi_type_v<ScalarType>, src, tag, comm, MPI_STATUS_IGNORE
-    );
-  } else { // TODO:
-    assert(v.span_is_contiguous() && "`Sampik::recv` only supports contiguous views");
-    return -1; // unreachable
-  }
+auto wait(Request req) -> Status {
+  MPI_Status sta;
+  MPI_Wait(req.get_inner_as_ptr(), &sta);
+  return Status(sta);
 }
 } // namespace Sampik
