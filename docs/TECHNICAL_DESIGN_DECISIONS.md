@@ -7,7 +7,7 @@ This document describe the technical design decisions for the SAMPIK project for
 
 The project is written in ISO C++20. Along with `if constexpr`, templated helper classes and functions, and other metaprogramming features available in previous standard versions, C++20 offers `concept`s and `requires` clauses that let us avoid SFINAE coding patterns altogether.
 
-We also plan on supporting C++23's `mdspan`.
+In the longer run, we also plan on supporting C++23's `mdspan`.
 
 
 ## Project layout
@@ -48,7 +48,10 @@ We want to steer away from a mere 1:1 wrapper of the MPI API (which includes way
 
 ### Non-blocking API
 
-Following Kokkos' approach, all communications initiated with SAMPIK have non-blocking/immediate semantics. This maps to non-blocking MPI functions (starting with `MPI_I*`). Other patterns that do not strictly follow the general "immediate" semantic can be optionnally opted-in using a template parameter (e.g. "buffered", "synchronous", etc.).
+Following Kokkos' approach, all communications initiated with SAMPIK have non-blocking/immediate semantics. This maps to non-blocking MPI functions (starting with `MPI_I*`). MPI-like specific algorithm characteristics can be optionnally opted-in using a template parameter (e.g. "buffered", etc.).
+
+Synchronous functions would be provided by other functions if necessary. (So algorithms may rely on MPI_Ssend).
+
 
 ### Request completion
 
@@ -57,17 +60,20 @@ See code examples in the [API pseudo-codes](./API_CODE_EXAMPLES.md) document.
 
 ### Calls from parallel regions
 
-Calls from parallel regions are only allowed when in the `Kokkos::OpenMP` execution space.
+Calls from parallel regions are not discussed yet but should allowed at least in parallel region of Host execution space.
 
 ### Thread ready and probing
 
 SAMPIK will provide `Sampik::matching_probe` and `Sampik::matching_recv`, similar to `MPI_Improbe` and `MPI_Imrecv` respectively, for knowing message sizes and creating views accordingly. This will allow "on-the-fly" view creation with correct dimensions using the explicit `Sampik::create_view_from_recv`.
 
-WIP.
+Other send/recv should rely on these functions.
 
-### Interoperability with unrelated uses
 
-WIP.
+### Interoperability
+
+How to deal with non-Kokkos View communication ? User should want to exchange other objects
+1. Provide API to communication non kokkos-view and use only SAMPIK. Can be hard to do for complex objects.
+2. Or be able to interact with regular MPI communications for example to do a WaitAll on our comm as well as user ones.
 
 
 ## API overview
