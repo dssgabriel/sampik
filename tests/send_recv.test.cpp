@@ -64,9 +64,7 @@ auto main(int argc, char* argv[]) -> int {
     if (rank == 0) {
       // Initialize view with all 1s
       Kokkos::parallel_for(
-        "init",
-        N,
-        KOKKOS_LAMBDA(int const i) { v(i) = 1; }
+        "init", N, KOKKOS_LAMBDA(int const i) { v(i) = 1; }
       );
 
       // Send initialized view
@@ -75,10 +73,7 @@ auto main(int argc, char* argv[]) -> int {
       // Perform a parallel reduction using Kokkos on the sent view
       ScalarType tmp{};
       Kokkos::parallel_reduce(
-        "reduce rank 0",
-        N,
-        KOKKOS_LAMBDA(int const i, ScalarType& tmp) { tmp += v(i); },
-        res_local
+        "reduce rank 0", N, KOKKOS_LAMBDA(int const i, ScalarType& tmp) { tmp += v(i); }, res_local
       );
 
       // Wait for send to finish
@@ -97,10 +92,7 @@ auto main(int argc, char* argv[]) -> int {
 
       // Perform a parallel reduction using Kokkos on the received view
       Kokkos::parallel_reduce(
-        "reduce rank 1",
-        N,
-        KOKKOS_LAMBDA(int const i, ScalarType& tmp) { tmp += v(i); },
-        res_local
+        "reduce rank 1", N, KOKKOS_LAMBDA(int const i, ScalarType& tmp) { tmp += v(i); }, res_local
       );
 
       // Send local reduction result to rank 0

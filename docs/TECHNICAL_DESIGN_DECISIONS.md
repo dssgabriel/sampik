@@ -82,27 +82,21 @@ How to deal with non-Kokkos View communication ? User should want to exchange ot
 
 Initialize SAMPIK:
 ```cpp
-auto Sampik::initialize() -> Sampik::ErrCode;
+auto sampik::initialize() -> void;
 ```
 Terminate SAMPIK:
 ```cpp
-auto Sampik::finalize() -> Sampik::ErrCode;
+auto sampik::finalize() -> void;
 ```
 
 Create a SAMPIK communicator:
 ```cpp
-auto Sampik::create_communicator() -> Sampik::Communicator
-```
-
-Probe for a matching request (still WIP):
-```cpp
-template <Sampik::Tag tag>
-auto Sampik::matching_probe(Sampik::Communicator comm, int src, Sampik::Request& req) -> Sampik::Status;
+auto sampik::make_channel() -> sampik::Channel;
 ```
 
 Wait on a request:
 ```cpp
-auto Sampik::wait(Sampik::Request& req) -> Sampik::Status;
+auto sampik::wait(Sampik::Request& req) -> Sampik::Status;
 ```
 
 Test a request:
