@@ -5,16 +5,15 @@ auto main() -> int {
   sampik::initialize();
   Kokkos::initialize();
   {
-    sampik::Channel<sampik::DefaultChannel> chan;
-    NodeId id = chan.id();
-    static_assert(2 == chan.size());
-
     Kokkos::View<double*> v("v", 1000);
+    auto id = sampik::get_id();
+
     if (id == 0) {
       Kokkos::parallel_for(v.extent(0), KOKKOS_LAMBDA(int i) { v(i) = double(i); });
-      sampik::send(chan, v).wait();
-      sampik::recv(chan, v).wait();
+      sampik::send(Channel{1}, v).wait();
+      sampik::recv(Channel{1}, v).wait();
     } else {
+      auto chan = Channel{0};
       sampik::recv(chan, v).wait();
       Kokkos::parallel_for(v.extent(0), KOKKOS_LAMBDA(int i) { v(i) += double(i); });
       sampik::send(chan, v).wait();
