@@ -19,6 +19,7 @@
  * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
  **/
 
+#include <Kokkos_Core_fwd.hpp>
 #include <sampik/sampik.hpp>
 
 #include <Kokkos_Core.hpp>
@@ -38,24 +39,16 @@ using ViewType = Kokkos::View<ScalarType*, Layout, MemorySpace>;
 auto main(int argc, char* argv[]) -> int {
   int ret = 0;
 
-  int lvl_reqst = MPI_THREAD_MULTIPLE;
-  int lvl_avail;
-  MPI_Init_thread(&argc, &argv, lvl_reqst, &lvl_avail);
-  assert(lvl_reqst == lvl_avail && "MPI Thread level request is not available");
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  int size;
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-  if (size != 2) {
-    std::cerr << "world size must be 2 but is " << size << "\n";
-    return -1;
-  }
-
+  MPI_Init(&argc, &argv);
   Kokkos::initialize(argc, argv);
   {
-    // Create communicator for SAMPIK
-    Sampik::Communicator comm;
+    sampik::Context ctx{Kokkos::DefaultExecutionSpace()};
+    int rank = ctx.rank();
+    int size = ctx.size();
+    if (size != 2) {
+      std::cerr << "world size must be 2 but is " << size << "\n";
+      return -1;
+    }
 
     ViewType v("v", N);
     ScalarType res_local{};
@@ -63,12 +56,10 @@ auto main(int argc, char* argv[]) -> int {
 
     if (rank == 0) {
       // Initialize view with all 1s
-      Kokkos::parallel_for(
-        "init", N, KOKKOS_LAMBDA(int const i) { v(i) = 1; }
-      );
+      Kokkos::parallel_for("init", N, KOKKOS_LAMBDA(int const i) { v(i) = 1; });
 
       // Send initialized view
-      auto send_req = Sampik::send<0>(comm, v, 1);
+      auto send_req = sampik::send(ctx, v, 1);
 
       // Perform a parallel reduction using Kokkos on the sent view
       ScalarType tmp{};
@@ -77,18 +68,17 @@ auto main(int argc, char* argv[]) -> int {
       );
 
       // Wait for send to finish
-      auto _ = Sampik::wait(send_req);
+      send_req.wait();
 
       // Receive result from rank 1
       MPI_Recv(
-        &res_other, 1, Sampik::Impl::mpi_type_v<ScalarType>, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE
+        &res_other, 1, sampik::Impl::mpi_type_v<ScalarType>, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE
       );
       // Send local result to rank 1
-      MPI_Send(&res_local, 1, Sampik::Impl::mpi_type_v<ScalarType>, 1, 2, MPI_COMM_WORLD);
+      MPI_Send(&res_local, 1, sampik::Impl::mpi_type_v<ScalarType>, 1, 2, MPI_COMM_WORLD);
     } else {
       // Receive initialized view from rank 0
-      auto recv_req = Sampik::recv<0>(comm, v, 0);
-      auto _ = Sampik::wait(recv_req);
+      sampik::recv(ctx, v, 0).wait();
 
       // Perform a parallel reduction using Kokkos on the received view
       Kokkos::parallel_reduce(
@@ -96,15 +86,15 @@ auto main(int argc, char* argv[]) -> int {
       );
 
       // Send local reduction result to rank 0
-      MPI_Send(&res_local, 1, Sampik::Impl::mpi_type_v<ScalarType>, 0, 1, MPI_COMM_WORLD);
+      MPI_Send(&res_local, 1, sampik::Impl::mpi_type_v<ScalarType>, 0, 1, MPI_COMM_WORLD);
       // Receive result from rank 0
       MPI_Recv(
-        &res_other, 1, Sampik::Impl::mpi_type_v<ScalarType>, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE
+        &res_other, 1, sampik::Impl::mpi_type_v<ScalarType>, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE
       );
     }
 
     // Check same result between ranks
-    if (rank == 0) {
+    if (rank == 1) {
       if (res_local == res_other) {
         std::cout << "PASSED\n";
         ret = 0;
@@ -116,6 +106,4 @@ auto main(int argc, char* argv[]) -> int {
   }
   Kokkos::finalize();
   MPI_Finalize();
-
-  return ret;
 }

@@ -26,83 +26,93 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace Sampik::Impl {
-template <typename T>
-inline auto mpi_type() -> MPI_Datatype {
-  static_assert(std::is_void_v<T>, "unimplemented MPI type");
-  return MPI_DATATYPE_NULL;
+namespace sampik::Impl {
+
+template <typename Scalar>
+MPI_Datatype mpi_type() {
+  using T = std::decay_t<Scalar>;
+
+  if constexpr (std::is_same_v<T, char>) {
+    return MPI_CHAR;
+  } else if constexpr (std::is_same_v<T, unsigned char>) {
+    return MPI_UNSIGNED_CHAR;
+  } else if constexpr (std::is_same_v<T, short>) {
+    return MPI_SHORT;
+  } else if constexpr (std::is_same_v<T, unsigned short>) {
+    return MPI_UNSIGNED_SHORT;
+  } else if constexpr (std::is_same_v<T, int>) {
+    return MPI_INT;
+  } else if constexpr (std::is_same_v<T, unsigned>) {
+    return MPI_UNSIGNED;
+  } else if constexpr (std::is_same_v<T, long>) {
+    return MPI_LONG;
+  } else if constexpr (std::is_same_v<T, unsigned long>) {
+    return MPI_UNSIGNED_LONG;
+  } else if constexpr (std::is_same_v<T, long long>) {
+    return MPI_LONG_LONG;
+  } else if constexpr (std::is_same_v<T, unsigned long long>) {
+    return MPI_UNSIGNED_LONG_LONG;
+  } else if constexpr (std::is_same_v<T, std::int8_t>) {
+    return MPI_INT8_T;
+  } else if constexpr (std::is_same_v<T, std::uint8_t>) {
+    return MPI_UINT8_T;
+  } else if constexpr (std::is_same_v<T, std::int16_t>) {
+    return MPI_INT16_T;
+  } else if constexpr (std::is_same_v<T, std::uint16_t>) {
+    return MPI_UINT16_T;
+  } else if constexpr (std::is_same_v<T, std::int32_t>) {
+    return MPI_INT32_T;
+  } else if constexpr (std::is_same_v<T, std::uint32_t>) {
+    return MPI_UINT32_T;
+  } else if constexpr (std::is_same_v<T, std::int64_t>) {
+    return MPI_INT64_T;
+  } else if constexpr (std::is_same_v<T, std::uint64_t>) {
+    return MPI_UINT64_T;
+  } else if constexpr (std::is_same_v<T, std::size_t>) {
+    if constexpr (sizeof(std::size_t) == 1) {
+      return MPI_UINT8_T;
+    }
+    if constexpr (sizeof(std::size_t) == 2) {
+      return MPI_UINT16_T;
+    }
+    if constexpr (sizeof(std::size_t) == 4) {
+      return MPI_UINT32_T;
+    }
+    if constexpr (sizeof(std::size_t) == 8) {
+      return MPI_UINT64_T;
+    }
+  } else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
+    if constexpr (sizeof(std::ptrdiff_t) == 1) {
+      return MPI_INT8_T;
+    }
+    if constexpr (sizeof(std::ptrdiff_t) == 2) {
+      return MPI_INT16_T;
+    }
+    if constexpr (sizeof(std::ptrdiff_t) == 4) {
+      return MPI_INT32_T;
+    }
+    if constexpr (sizeof(std::ptrdiff_t) == 8) {
+      return MPI_INT64_T;
+    }
+  } else if constexpr (std::is_same_v<T, float>) {
+    return MPI_FLOAT;
+  } else if constexpr (std::is_same_v<T, double>) {
+    return MPI_DOUBLE;
+  } else if constexpr (std::is_same_v<T, long double>) {
+    return MPI_LONG_DOUBLE;
+  } else if constexpr (std::is_same_v<T, Kokkos::complex<float>>) {
+    return MPI_COMPLEX;
+  } else if constexpr (std::is_same_v<T, Kokkos::complex<double>>) {
+    return MPI_DOUBLE_COMPLEX;
+  } else if constexpr (std::is_trivially_copyable_v<T>) {
+    return MPI_BYTE;
+  } else {
+    static_assert(std::is_void_v<T>, "mpi_type not implemented");
+    return MPI_CHAR; // unreachable
+  }
 }
 
-template <>
-inline auto mpi_type<char>() -> MPI_Datatype {
-  return MPI_CHAR;
-}
+template <typename Scalar>
+inline MPI_Datatype mpi_type_v = mpi_type<Scalar>();
 
-template <>
-inline auto mpi_type<int8_t>() -> MPI_Datatype {
-  return MPI_INT8_T;
-}
-
-template <>
-inline auto mpi_type<int16_t>() -> MPI_Datatype {
-  return MPI_INT16_T;
-}
-
-template <>
-inline auto mpi_type<int32_t>() -> MPI_Datatype {
-  return MPI_INT32_T;
-}
-
-template <>
-inline auto mpi_type<int64_t>() -> MPI_Datatype {
-  return MPI_INT64_T;
-}
-
-template <>
-inline auto mpi_type<long long signed int>() -> MPI_Datatype {
-  return MPI_LONG_LONG_INT;
-}
-
-template <>
-inline auto mpi_type<uint8_t>() -> MPI_Datatype {
-  return MPI_UINT8_T;
-}
-
-template <>
-inline auto mpi_type<uint16_t>() -> MPI_Datatype {
-  return MPI_UINT16_T;
-}
-
-template <>
-inline auto mpi_type<uint32_t>() -> MPI_Datatype {
-  return MPI_UINT32_T;
-}
-
-template <>
-inline auto mpi_type<uint64_t>() -> MPI_Datatype {
-  return MPI_UINT64_T;
-}
-
-template <>
-inline auto mpi_type<long long unsigned int>() -> MPI_Datatype {
-  return MPI_UNSIGNED_LONG_LONG;
-}
-
-template <>
-inline auto mpi_type<float>() -> MPI_Datatype {
-  return MPI_FLOAT;
-}
-
-template <>
-inline auto mpi_type<double>() -> MPI_Datatype {
-  return MPI_DOUBLE;
-}
-
-template <>
-inline auto mpi_type<long double>() -> MPI_Datatype {
-  return MPI_LONG_DOUBLE;
-}
-
-template <typename T>
-inline MPI_Datatype mpi_type_v = mpi_type<T>();
-} // namespace Sampik::Impl
+} // namespace sampik::Impl

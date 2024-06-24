@@ -21,53 +21,130 @@
 
 #pragma once
 
+#include <Kokkos_Core_fwd.hpp>
+#include <sampik/impl/concepts.hpp>
 #include <sampik/impl/types.hpp>
+#include <sampik/traits.hpp>
 
 #include <Kokkos_Core.hpp>
 #include <mpi.h>
 
-#include <cassert>
-#include <cstdint>
-#include <type_traits>
-#include <vector>
-
 namespace sampik {
 
-using NodeId = uint64_t;
-
-class Channel {
-  std::array<NodeId, N> endpoints;
-
+template <KokkosExecSpace ExecSpace>
+class Context {
 public:
-  Channel() {}
-  ~Channel() {}
+  Context() : _space(Kokkos::DefaultExecutionSpace()), _comm(MPI_COMM_NULL) {
+    MPI_Comm_dup(MPI_COMM_WORLD, &_comm);
+  }
+
+  Context(ExecSpace const& space) : _space(space), _comm(MPI_COMM_NULL) {
+    MPI_Comm_dup(MPI_COMM_WORLD, &_comm);
+  }
+
+  Context(MPI_Comm comm) : _space(Kokkos::DefaultExecutionSpace()), _comm(MPI_COMM_NULL) {
+    MPI_Comm_dup(comm, &_comm);
+  }
+
+  Context(ExecSpace const& space, MPI_Comm comm) : _space(space), _comm(MPI_COMM_NULL) {
+    MPI_Comm_dup(comm, &_comm);
+  }
+
+  ~Context() { MPI_Comm_free(&_comm); }
+
+  auto comm() -> MPI_Comm& { return _comm; }
+
+  auto space() -> ExecSpace const& { return _space; }
+
+  auto rank() -> int {
+    int rank;
+    MPI_Comm_rank(_comm, &rank);
+    return rank;
+  }
+
+  auto size() -> int {
+    int size;
+    MPI_Comm_size(_comm, &size);
+    return size;
+  }
+
+private:
+  ExecSpace _space;
+  MPI_Comm _comm;
 };
 
 class Request {
 public:
-  Request() {}
-  ~Request() = default;
+  Request() = delete;
+  Request(MPI_Request req) : _req(req) {}
+  ~Request() { MPI_Wait(&_req, MPI_STATUS_IGNORE); }
 
-  auto wait() -> void;
-  auto test() -> void;
+  auto req() -> MPI_Request& { return _req; }
+
+  auto wait() -> void { MPI_Wait(&_req, MPI_STATUS_IGNORE); }
+
+  auto test() -> bool {
+    int flag;
+    MPI_Test(&_req, &flag, MPI_STATUS_IGNORE);
+    return 0 != flag;
+  }
+
+private:
+  MPI_Request _req;
 };
 
 /// Send a `Kokkos::View` through MPI.
 ///
 /// This function is non-blocking.
 /// Assumptions:
-/// - View is rank-1 contiguous;
+/// - View is contiguous;
 /// - View's `value_type` is an MPI-defined datatype;
-template <class SV, class... SP>
-auto send(Channel chan, Kokkos::View<SV, SP...> const& view) -> Request {}
+template <KokkosExecSpace ExecSpace, KokkosView SendView>
+auto send(Context<ExecSpace> ctx, SendView const& view, int target) -> Request {
+  using SendScalar = typename SendView::non_const_value_type;
+
+  if (sampik::is_contiguous<SendView>) {
+    MPI_Request req;
+    MPI_Isend(
+      sampik::data(view),
+      sampik::span(view),
+      Impl::mpi_type_v<SendScalar>,
+      target,
+      0,
+      ctx.comm(),
+      &req
+    );
+    return Request(req);
+  } else {
+    MPI_Abort(ctx.comm(), -1);
+  }
+}
 
 /// Receive a `Kokkos::View` through MPI.
 ///
 /// This function is non-blocking.
 /// Assumptions:
-/// - View is rank-1 contiguous
+/// - View is contiguous
 /// - View's `value_type` is an MPI-defined datatype
-template <class SV, class... SP>
-auto recv(Channel chan, Kokkos::View<SV, SP...> const& view) -> Request {}
+template <KokkosExecSpace ExecSpace, KokkosView RecvView>
+auto recv(Context<ExecSpace> ctx, RecvView const& view, int target) -> Request {
+  using RecvScalar = typename RecvView::non_const_value_type;
+
+  if (sampik::is_contiguous<RecvView>) {
+    MPI_Request req;
+    MPI_Irecv(
+      sampik::data(view),
+      sampik::span(view),
+      Impl::mpi_type_v<RecvScalar>,
+      target,
+      0,
+      ctx.comm(),
+      &req
+    );
+    return Request(req);
+  } else {
+    MPI_Abort(ctx.comm(), -1);
+  }
+}
 
 } // namespace sampik
