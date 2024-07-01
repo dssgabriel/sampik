@@ -50,19 +50,29 @@ public:
     MPI_Comm_dup(comm, &_comm);
   }
 
-  ~Context() { MPI_Comm_free(&_comm); }
+  // NOTE: for now, we do not want to deal with copy/move ctors/assignments
+  Context(Context const& other) = delete;
+  Context(Context&& other) = default;
+  auto operator=(Context const& other) -> Context& = delete;
+  auto operator=(Context&& other) -> Context& = default;
 
-  auto comm() -> MPI_Comm& { return _comm; }
+  ~Context() {
+    if (_comm != MPI_COMM_WORLD && _comm != MPI_COMM_SELF && _comm != MPI_COMM_NULL) {
+      MPI_Comm_free(&_comm);
+    }
+  }
 
-  auto space() -> ExecSpace const& { return _space; }
+  [[nodiscard]] auto comm() const -> MPI_Comm const& { return _comm; }
 
-  auto rank() -> int {
+  [[nodiscard]] auto space() const -> ExecSpace const& { return _space; }
+
+  [[nodiscard]] auto rank() const -> int {
     int rank;
     MPI_Comm_rank(_comm, &rank);
     return rank;
   }
 
-  auto size() -> int {
+  [[nodiscard]] auto size() const -> int {
     int size;
     MPI_Comm_size(_comm, &size);
     return size;
@@ -75,15 +85,17 @@ private:
 
 class Request {
 public:
-  Request() = delete;
-  Request(MPI_Request req) : _req(req) {}
+  Request(Request const& other) = delete;
+  Request(Request&& other) = default;
+  auto operator=(Request const& other) = delete;
+  auto operator=(Request&& other) = default;
   ~Request() { MPI_Wait(&_req, MPI_STATUS_IGNORE); }
 
-  auto req() -> MPI_Request& { return _req; }
+  [[nodiscard]] auto req() const -> MPI_Request const& { return _req; }
 
-  auto wait() -> void { MPI_Wait(&_req, MPI_STATUS_IGNORE); }
+  auto wait() const -> void { MPI_Wait(&_req, MPI_STATUS_IGNORE); }
 
-  auto test() -> bool {
+  [[nodiscard]] auto test() const -> bool {
     int flag;
     MPI_Test(&_req, &flag, MPI_STATUS_IGNORE);
     return 0 != flag;
@@ -100,7 +112,7 @@ private:
 /// - View is contiguous;
 /// - View's `value_type` is an MPI-defined datatype;
 template <KokkosExecSpace ExecSpace, KokkosView SendView>
-auto send(Context<ExecSpace> ctx, SendView const& view, int target) -> Request {
+auto send(Context<ExecSpace> const& ctx, SendView const& view, int target) -> Request {
   using SendScalar = typename SendView::non_const_value_type;
 
   if (sampik::is_contiguous<SendView>) {
@@ -127,7 +139,7 @@ auto send(Context<ExecSpace> ctx, SendView const& view, int target) -> Request {
 /// - View is contiguous
 /// - View's `value_type` is an MPI-defined datatype
 template <KokkosExecSpace ExecSpace, KokkosView RecvView>
-auto recv(Context<ExecSpace> ctx, RecvView const& view, int target) -> Request {
+auto recv(Context<ExecSpace> const& ctx, RecvView const& view, int target) -> Request {
   using RecvScalar = typename RecvView::non_const_value_type;
 
   if (sampik::is_contiguous<RecvView>) {
