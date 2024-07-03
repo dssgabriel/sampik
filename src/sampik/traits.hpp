@@ -40,37 +40,37 @@ struct Traits<View> {
 };
 
 template <KokkosView View>
-auto data(View const& v) {
+auto data(View const& v) -> View::pointer_type {
   return v.data();
 }
 
 template <KokkosView View>
-auto span(View const& v) {
+auto span(View const& v) -> size_t {
   return v.span();
 }
 
 // true iff product of extents is span
 template <KokkosView View>
-bool is_contiguous(View const& v) {
+auto is_contiguous(View const& v) -> bool {
   return v.span_is_contiguous();
 }
 
 template <KokkosView View>
-constexpr size_t rank() {
+constexpr auto rank() -> size_t {
   return View::rank;
 }
 
 template <KokkosView View>
-size_t extent(View const& v, int const i) {
+auto extent(View const& v, int const i) -> size_t {
   return v.extent(i);
 }
 template <KokkosView View>
-size_t stride(View const& v, int const i) {
+auto stride(View const& v, int const i) -> size_t {
   return v.stride(i);
 }
 
 template <KokkosView View>
-constexpr bool is_reference_counted() {
+constexpr auto is_reference_counted() -> bool {
   return true;
 }
 
