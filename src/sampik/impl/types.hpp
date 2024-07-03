@@ -29,7 +29,7 @@
 namespace sampik::Impl {
 
 template <typename Scalar>
-MPI_Datatype mpi_type() {
+auto mpi_type() -> MPI_Datatype {
   using T = std::decay_t<Scalar>;
 
   if constexpr (std::is_same_v<T, char>) {
@@ -69,29 +69,29 @@ MPI_Datatype mpi_type() {
   } else if constexpr (std::is_same_v<T, std::uint64_t>) {
     return MPI_UINT64_T;
   } else if constexpr (std::is_same_v<T, std::size_t>) {
-    if constexpr (sizeof(std::size_t) == 1) {
+    if constexpr (1 == sizeof(std::size_t)) {
       return MPI_UINT8_T;
     }
-    if constexpr (sizeof(std::size_t) == 2) {
+    if constexpr (2 == sizeof(std::size_t)) {
       return MPI_UINT16_T;
     }
-    if constexpr (sizeof(std::size_t) == 4) {
+    if constexpr (4 == sizeof(std::size_t)) {
       return MPI_UINT32_T;
     }
-    if constexpr (sizeof(std::size_t) == 8) {
+    if constexpr (8 == sizeof(std::size_t)) {
       return MPI_UINT64_T;
     }
   } else if constexpr (std::is_same_v<T, std::ptrdiff_t>) {
-    if constexpr (sizeof(std::ptrdiff_t) == 1) {
+    if constexpr (1 == sizeof(std::ptrdiff_t)) {
       return MPI_INT8_T;
     }
-    if constexpr (sizeof(std::ptrdiff_t) == 2) {
+    if constexpr (2 == sizeof(std::ptrdiff_t)) {
       return MPI_INT16_T;
     }
-    if constexpr (sizeof(std::ptrdiff_t) == 4) {
+    if constexpr (4 == sizeof(std::ptrdiff_t)) {
       return MPI_INT32_T;
     }
-    if constexpr (sizeof(std::ptrdiff_t) == 8) {
+    if constexpr (8 == sizeof(std::ptrdiff_t)) {
       return MPI_INT64_T;
     }
   } else if constexpr (std::is_same_v<T, float>) {
