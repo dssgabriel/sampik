@@ -38,11 +38,11 @@ public:
     MPI_Comm_dup(MPI_COMM_WORLD, &_comm);
   }
 
-  Context(ExecSpace const& space) : _space(space), _comm(MPI_COMM_NULL) {
+  explicit Context(ExecSpace const& space) : _space(space), _comm(MPI_COMM_NULL) {
     MPI_Comm_dup(MPI_COMM_WORLD, &_comm);
   }
 
-  Context(MPI_Comm comm) : _space(Kokkos::DefaultExecutionSpace()), _comm(MPI_COMM_NULL) {
+  explicit Context(MPI_Comm comm) : _space(Kokkos::DefaultExecutionSpace()), _comm(MPI_COMM_NULL) {
     MPI_Comm_dup(comm, &_comm);
   }
 
@@ -67,13 +67,13 @@ public:
   [[nodiscard]] auto space() const -> ExecSpace const& { return _space; }
 
   [[nodiscard]] auto rank() const -> int {
-    int rank;
+    int rank{};
     MPI_Comm_rank(_comm, &rank);
     return rank;
   }
 
   [[nodiscard]] auto size() const -> int {
-    int size;
+    int size{};
     MPI_Comm_size(_comm, &size);
     return size;
   }
@@ -85,18 +85,20 @@ private:
 
 class Request {
 public:
+  explicit Request(MPI_Request req) : _req(req) {}
+  
   Request(Request const& other) = delete;
   Request(Request&& other) = default;
-  auto operator=(Request const& other) = delete;
-  auto operator=(Request&& other) = default;
+  auto operator=(Request const& other) -> Request& = delete;
+  auto operator=(Request&& other) -> Request& = default;
   ~Request() { MPI_Wait(&_req, MPI_STATUS_IGNORE); }
 
   [[nodiscard]] auto req() const -> MPI_Request const& { return _req; }
 
-  auto wait() const -> void { MPI_Wait(&_req, MPI_STATUS_IGNORE); }
+  auto wait() -> void { MPI_Wait(&_req, MPI_STATUS_IGNORE); }
 
-  [[nodiscard]] auto test() const -> bool {
-    int flag;
+  [[nodiscard]] auto test() -> bool {
+    int flag{};
     MPI_Test(&_req, &flag, MPI_STATUS_IGNORE);
     return 0 != flag;
   }
@@ -115,21 +117,22 @@ template <KokkosExecSpace ExecSpace, KokkosView SendView>
 auto send(Context<ExecSpace> const& ctx, SendView const& view, int target) -> Request {
   using SendScalar = typename SendView::non_const_value_type;
 
-  if (sampik::is_contiguous<SendView>) {
-    MPI_Request req;
-    MPI_Isend(
-      sampik::data(view),
-      sampik::span(view),
-      Impl::mpi_type_v<SendScalar>,
-      target,
-      0,
-      ctx.comm(),
-      &req
-    );
-    return Request(req);
-  } else {
+  if (!sampik::is_contiguous<SendView>) {
     MPI_Abort(ctx.comm(), -1);
   }
+
+  MPI_Request req = MPI_REQUEST_NULL;
+  MPI_Isend(
+    sampik::data(view),
+    sampik::span(view),
+    Impl::mpi_type_v<SendScalar>,
+    target,
+    0,
+    ctx.comm(),
+    &req
+  );
+
+  return Request{req};
 }
 
 /// Receive a `Kokkos::View` through MPI.
@@ -142,21 +145,22 @@ template <KokkosExecSpace ExecSpace, KokkosView RecvView>
 auto recv(Context<ExecSpace> const& ctx, RecvView const& view, int target) -> Request {
   using RecvScalar = typename RecvView::non_const_value_type;
 
-  if (sampik::is_contiguous<RecvView>) {
-    MPI_Request req;
-    MPI_Irecv(
-      sampik::data(view),
-      sampik::span(view),
-      Impl::mpi_type_v<RecvScalar>,
-      target,
-      0,
-      ctx.comm(),
-      &req
-    );
-    return Request(req);
-  } else {
+  if (!sampik::is_contiguous<RecvView>) {
     MPI_Abort(ctx.comm(), -1);
   }
+
+  MPI_Request req = MPI_REQUEST_NULL;
+  MPI_Irecv(
+    sampik::data(view),
+    sampik::span(view),
+    Impl::mpi_type_v<RecvScalar>,
+    target,
+    0,
+    ctx.comm(),
+    &req
+  );
+
+  return Request{req};
 }
 
 } // namespace sampik
