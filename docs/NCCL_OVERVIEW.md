@@ -111,6 +111,7 @@ Group functions (`ncclGroupStart` and `ncclGroupEnd`) may be used to merge multi
 1. managing multiple GPUs from one thread (deadlocks).
 2. aggregating operations for performance.
 3. multiple point-to-point operations.
+
 All three can be used in conjunction (at the exception of calling `ncclCommInitRank`).
 
 ### Manage multiple GPUs from one thread
@@ -190,11 +191,11 @@ It is possible to mix multiple streams within a group call. This enforces a depe
 starts and blocks all streams until it completes, causing a global synchronization (as if it had been posted on every
 stream).
 
-### Interoperability with MPI
+### Differences with MPI
 
 #### `ReduceScatter` operation
-The `ncclReduceScatter` operation is similar to the `MPI_Reduce_scatter_block operation`, not `MPI_Reduce_scatter`. The
-latter is intrinsically a "vector" function, while `MPI_Reduce_scatter_block` (defined later to fill the missing
+The `ncclReduceScatter` operation is similar to the `MPI_Reduce_scatter_block` operation, not `MPI_Reduce_scatter`. The
+latter is intrinsically a "vector" function, while `MPI_Reduce_scatter_block` (later defined to fill the missing
 semantics) provides regular counts similarly to the mirror function `MPI_Allgather`. This is an oddity of MPI which has
 not been fixed for legitimate retro-compatibility reasons and that NCCL does not follow.
 
@@ -206,6 +207,36 @@ NCCL does not allow that, defining a single count and a single data type.
 `ncclRecv` does not support the equivalent of `MPI_ANY_SOURCE`; a specific source rank must always be provided.
 Similarly, the provided receive count must match the send count. Further, there is no concept of message tags.
 
+#### In-place operations
+NCCL does not support an equivalent of `MPI_IN_PLACE`. However, in-place operations are still possible and are optimized
+by NCCL if it detects that the send and receive buffers point to the same location.
+
+For `ncclReduceScatter` and `ncclAllGather`, in place operations are done when the per-rank pointer is located at the
+rank offset of the global buffer. More precisely, these calls are considered in place :
+```cpp
+ncclReduceScatter(
+  data,
+  data + rank * rcnt,
+  rcnt,
+  datatype,
+  op,
+  comm,
+  stream
+);
+
+ncclAllGather(
+  data + rank * scnt,
+  data,
+  scnt,
+  datatype,
+  op,
+  comm,
+  stream
+);
+```
+
+### Interoperability with MPI
+
 #### Progress
 MPI defines a notion of progress which means that MPI operations need the program to call MPI functions (potentially
 multiple times) to make progress and eventually complete.
@@ -215,7 +246,7 @@ operation, for example calling `cudaStreamSynchronize`, may create a deadlock in
 one rank could block other ranks, preventing them from reaching the NCCL call that would unblock the NCCL collective on
 the first rank.
 
-In that case, the cudaStreamSynchronize call should be replaced by a loop like the following:
+In that case, the `cudaStreamSynchronize` call should be replaced by a loop like the following:
 ```cpp
 cudaError_t err = cudaErrorNotReady;
 int flag;
@@ -246,32 +277,6 @@ Collective operations must be called on every rank (hence, CUDA device), or othe
 - `AllReduce`
 - `AllGather`
 - `Broadcast`
-
-In-place operations are optimized by NCCL if it detects that the send and receive buffers point to the same location.
-
-For `ncclReduceScatter` and `ncclAllGather`, in place operations are done when the per-rank pointer is located at the
-rank offset of the global buffer. More precisely, these calls are considered in place :
-```cpp
-ncclReduceScatter(
-  data,
-  data + rank * rcnt,
-  rcnt,
-  datatype,
-  op,
-  comm,
-  stream
-);
-
-ncclAllGather(
-  data + rank * scnt,
-  data,
-  scnt,
-  datatype,
-  op,
-  comm,
-  stream
-);
-```
 
 ### Point-to-point (since 2.7)
 
