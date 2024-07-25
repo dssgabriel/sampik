@@ -5,9 +5,9 @@ SAMPIK: Simple API for Message Passing Interop with Kokkos
 
 .. warning:: This is a work in progress and is not yet ready for general use.
 
-SAMPIK is a simple, generic API enabling interoperability between Kokkos and Message Passing-based libraries such as MPI or NCCL/RCCL.
+Sampik is a simple, generic API enabling interoperability between Kokkos and Message Passing-based libraries such as MPI or NCCL/RCCL.
 
-Get SAMPIK from GitHub:
+Get sampik from GitHub:
 
 .. code-block:: console
 
@@ -46,4 +46,3 @@ Full manual:
 
 	contributing/documentation
 	contributing/developper_guide
-

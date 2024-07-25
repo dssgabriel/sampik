@@ -1,7 +1,7 @@
 Documentation
 =============
 
-You are welcome to extend SAMPIK's documentation! All help is appreciated.
+You are welcome to extend sampik's documentation! All help is appreciated.
 
 Using reStructedText
 --------------------

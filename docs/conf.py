@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'SAMPIK'
+project = 'sampik'
 copyright = '2024, CEA'
 author = 'Cédric Chevalier, Gabriel Dos Santos, Hugo Taboada'
 # release = '0.0.2'
@@ -25,4 +25,4 @@ html_theme = 'furo'
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'emacs'
-pygments_dark_style = 'github-dark'
+pygments_dark_style = 'dracula'
