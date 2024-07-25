@@ -20,7 +20,8 @@ A handle wrapper for the underlying communication backend "communicator":
 	  auto rank(void) -> RankId;
 
 	  auto size(void) -> int;
-	  ...
+
+	  auto get_inner(void) -> CommSpace::CommunicatorType;
 
 	 private:
 	  ...
@@ -32,5 +33,9 @@ A request wrapper for waiting/testing the progression of the communication:
 
 	template <CommunicationSpace CommSpace>
 	class Request {
+	 public:
+	  auto get_inner(void) -> CommSpace::RequestType;
+
+	 private:
 	  ...
 	};
