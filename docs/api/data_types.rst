@@ -15,7 +15,10 @@ A handle wrapper for the underlying communication backend "communicator":
 	class Handle {
 	 public:
 	  template <KokkosExecutionSpace ExecSpace>
-	  Handle(ExecSpace const& exec_space);
+	  Handle(CommSpace const& comm_space, ExecSpace const& exec_space);
+
+	  template <KokkosExecutionSpace ExecSpace>
+	  Handle(CommSpace::CommunicatorType comm, ExecSpace const& exec_space);
 
 	  auto rank(void) -> RankId;
 
