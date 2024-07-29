@@ -1,4 +1,6 @@
 .idea
 .ignore
+.venv
 build
+_build
 compile_flags.txt
