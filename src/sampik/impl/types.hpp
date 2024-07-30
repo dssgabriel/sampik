@@ -28,6 +28,8 @@
 
 namespace sampik::Impl {
 
+using Rank = int;
+
 template <typename Scalar>
 auto mpi_type() -> MPI_Datatype {
   using T = std::decay_t<Scalar>;

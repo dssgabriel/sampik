@@ -21,23 +21,39 @@
 
 #pragma once
 
-#include "impl/initialize.hpp"
+#include <Kokkos_Core_fwd.hpp>
 #include <sampik/impl/concepts.hpp>
-#include <sampik/impl/initialize.hpp>
-#include <sampik/impl/recv.hpp>
-#include <sampik/impl/send.hpp>
 #include <sampik/impl/types.hpp>
-
-#include <sampik/comm_modes.hpp>
-#include <sampik/context.hpp>
-#include <sampik/request.hpp>
 #include <sampik/traits.hpp>
+
+#include <Kokkos_Core.hpp>
+#include <mpi.h>
 
 namespace sampik {
 
-using Impl::finalize;
-using Impl::initialize;
-using Impl::recv;
-using Impl::send;
+class Request {
+public:
+  Request(MPI_Request req) : _req(req) {}
+
+  Request(Request const& other) = delete;
+  Request(Request&& other) = default;
+  auto operator=(Request const& other) -> Request& = delete;
+  auto operator=(Request&& other) -> Request& = default;
+
+  ~Request() { MPI_Wait(&_req, MPI_STATUS_IGNORE); }
+
+  [[nodiscard]] constexpr auto req() const -> MPI_Request const& { return _req; }
+
+  auto wait() -> void { MPI_Wait(&_req, MPI_STATUS_IGNORE); }
+
+  [[nodiscard]] auto test() -> bool {
+    int flag;
+    MPI_Test(&_req, &flag, MPI_STATUS_IGNORE);
+    return 0 != flag;
+  }
+
+private:
+  MPI_Request _req;
+};
 
 } // namespace sampik

@@ -40,18 +40,18 @@ struct Traits<View> {
 };
 
 template <KokkosView View>
-auto data(View const& v) -> View::pointer_type {
+constexpr auto data(View const v) -> View::pointer_type {
   return v.data();
 }
 
 template <KokkosView View>
-auto span(View const& v) -> size_t {
+constexpr auto span(View const v) -> size_t {
   return v.span();
 }
 
 // true iff product of extents is span
 template <KokkosView View>
-auto is_contiguous(View const& v) -> bool {
+auto is_contiguous(View const v) -> bool {
   return v.span_is_contiguous();
 }
 
@@ -61,11 +61,12 @@ constexpr auto rank() -> size_t {
 }
 
 template <KokkosView View>
-auto extent(View const& v, int const i) -> size_t {
+constexpr auto extent(View const v, int const i) -> size_t {
   return v.extent(i);
 }
+
 template <KokkosView View>
-auto stride(View const& v, int const i) -> size_t {
+auto stride(View const v, int const i) -> size_t {
   return v.stride(i);
 }
 

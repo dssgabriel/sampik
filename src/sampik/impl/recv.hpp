@@ -21,23 +21,44 @@
 
 #pragma once
 
-#include "impl/initialize.hpp"
 #include <sampik/impl/concepts.hpp>
-#include <sampik/impl/initialize.hpp>
-#include <sampik/impl/recv.hpp>
-#include <sampik/impl/send.hpp>
 #include <sampik/impl/types.hpp>
 
-#include <sampik/comm_modes.hpp>
 #include <sampik/context.hpp>
 #include <sampik/request.hpp>
 #include <sampik/traits.hpp>
 
-namespace sampik {
+#include <Kokkos_Core.hpp>
+#include <Kokkos_Core_fwd.hpp>
+#include <mpi.h>
 
-using Impl::finalize;
-using Impl::initialize;
-using Impl::recv;
-using Impl::send;
+namespace sampik::Impl {
 
-} // namespace sampik
+/// Receive a `Kokkos::View` through MPI.
+///
+/// This function is non-blocking.
+/// Assumptions:
+/// - View is contiguous
+/// - View's `value_type` is an MPI-defined datatype
+template <KokkosExecSpace ExecSpace, KokkosView RecvView>
+auto recv(Context<ExecSpace> const& ctx, RecvView const view, int target) -> Request {
+  using RecvScalar = typename RecvView::non_const_value_type;
+
+  if (sampik::is_contiguous<RecvView>) {
+    MPI_Request req;
+    MPI_Irecv(
+      sampik::data(view),
+      sampik::span(view),
+      Impl::mpi_type_v<RecvScalar>,
+      target,
+      0,
+      ctx.comm(),
+      &req
+    );
+    return Request(req);
+  } else {
+    MPI_Abort(ctx.comm(), -1);
+  }
+}
+
+} // namespace sampik::Impl

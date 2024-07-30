@@ -21,6 +21,7 @@ cmake_minimum_required(VERSION 3.16)
 project(sampik LANGUAGES CXX DESCRIPTION "SAMPIK: Simple API for MPI + Kokkos")
 
 set(CMAKE_COLOR_DIAGNOSTICS ON)
+set(CMAKE_CXX_CLANG_TIDY clang-tidy -checks=-*,cppcoreguidelines-*)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 20)
