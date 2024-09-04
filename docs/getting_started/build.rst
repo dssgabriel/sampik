@@ -26,7 +26,7 @@ A basic CMake configure and build:
 
 	$ cmake -S <PATH_TO_SAMPIK> \
 		-B <PATH_TO_BUILD_DIR> \
-		-DKokkosROOT <PATH_TO_KOKKOS_INSTALL>
+		-DKokkosROOT=<PATH_TO_KOKKOS_INSTALL>
 	$ cmake --build <PATH_TO_BUILD_DIR>
 
 Install
@@ -47,4 +47,4 @@ Tests must be enabled via CMake configuration options:
 
 	$ cmake -Dsampik_ENABLE_TESTS=ON # other options...
 	$ cmake --build <PATH_TO_BUILD_DIR>
-	$ cmake --build <PATH_TO_BUILD_DIR> --target test
+	$ ctest --test-dir <PATH_TO_BUILD_DIR>/test
