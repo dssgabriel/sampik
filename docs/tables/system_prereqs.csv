@@ -1,5 +1,5 @@
 Name, Notes, Requirement reasons
-CMake, v3.16+ required, Build system
+CMake, v3.23+ required, Build system
 C++ compiler, C++20 conforming, Building software
 Kokkos, v4.0+, Building software
 MPI, MPI-3+ conforming implementation, Communication space backend
