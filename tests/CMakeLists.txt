@@ -21,3 +21,10 @@ add_executable(send_recv send_recv.test.cpp)
 target_link_libraries(send_recv PRIVATE sampik::sampik Kokkos::kokkos MPI::MPI_CXX)
 
 add_test(NAME send_recv COMMAND mpirun -np 2 send_recv)
+
+find_package(KokkosKernels REQUIRED)
+
+add_executable(dist_matvec dist_matvec.cpp)
+target_link_libraries(dist_matvec PRIVATE sampik::sampik Kokkos::kokkos Kokkos::kokkoskernels MPI::MPI_CXX)
+
+add_test(NAME dist_matvec COMMAND mpirun -np 4 dist_matvec)
