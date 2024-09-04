@@ -10,3 +10,4 @@ QualifierAlignment: Right
 AlignAfterOpenBracket: BlockIndent
 BinPackArguments: false
 AlwaysBreakTemplateDeclarations: true
+AlignConsecutiveAssignments: Consecutive

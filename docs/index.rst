@@ -28,6 +28,7 @@ Full manual:
 
 	design_model/communication_spaces
 	design_model/constraints
+	design_model/mpi_interop
 
 .. toctree::
 	:maxdepth: 1
