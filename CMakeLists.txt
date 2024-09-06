@@ -15,32 +15,44 @@
 # out of or in connection with the software or the use or other dealings
 # in the software.
 #
-# Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
+# Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr>
 
-cmake_minimum_required(VERSION 3.16)
-project(sampik LANGUAGES CXX DESCRIPTION "SAMPIK: Simple API for MPI + Kokkos")
+cmake_minimum_required(VERSION 3.23)
 
+project(
+    sampik
+    LANGUAGES CXX
+    VERSION 0.1.0
+    DESCRIPTION "sampik: Simple API for Message Passing Interoperability with Kokkos"
+)
+
+# --- PROJECT DEPENDENCIES --- #
+find_package(MPI REQUIRED)
+find_package(Kokkos REQUIRED)
+
+# --- PROJECT-WIDE SETTINGS --- #
+# Colored compiler diagnostics for Ninja
 set(CMAKE_COLOR_DIAGNOSTICS ON)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 20)
-  set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  message(STATUS "Setting C++ standard to C++${CMAKE_CXX_STANDARD}")
-endif()
+# --- PROJECT TARGETS --- #
+add_subdirectory(include)
 
-if(CMAKE_BUILD_TYPE EQUAL Debug)
-    add_compile_options(-Wall -Wextra -Wpedantic -Wconversion -fanalyzer)
-endif()
+# --- PROJECT OPTIONS --- #
+option(sampik_ENABLE_MPI      "Build sampik with MPI support" ON)
+option(sampik_ENABLE_NCCL     "Build sampik with NCCL support" OFF)
+option(sampik_ENABLE_TESTS    "Build sampik tests" OFF)
+option(sampik_ENABLE_EXAMPLES "Build sampik examples" ON)
 
-include(GNUInstallDirs)
+set(ENV{SAMPIK_ENABLE_MPI}  ${sampik_ENABLE_MPI})
+set(ENV{SAMPIK_ENABLE_NCCL} ${sampik_ENABLE_NCCL})
 
-find_package(MPI REQUIRED)
-add_subdirectory(ext/kokkos)
-
-enable_testing()
-
-add_subdirectory(src)
-
-if (CMAKE_TESTING_ENABLED)
+set(SAMPIK_ENABLE_TESTS ${sampik_ENABLE_TESTS} CACHE BOOL "" FORCE)
+if(SAMPIK_ENABLE_TESTS)
+    enable_testing()
     add_subdirectory(tests)
+endif()
+
+set(SAMPIK_ENABLE_EXAMPLES ${sampik_ENABLE_EXAMPLES} CACHE BOOL "" FORCE)
+if (SAMPIK_ENABLE_EXAMPLES)
+    add_subdirectory(examples)
 endif()

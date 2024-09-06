@@ -15,16 +15,18 @@
 # out of or in connection with the software or the use or other dealings
 # in the software.
 #
-# Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
+# Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr>
 
-add_executable(send_recv send_recv.test.cpp)
-target_link_libraries(send_recv PRIVATE sampik::sampik Kokkos::kokkos MPI::MPI_CXX)
+cmake_minimum_required(VERSION 3.23)
+
+project(sampik-tests LANGUAGES CXX DESCRIPTION "sampik tests")
+
+if(NOT TARGET sampik::sampik)
+  find_package(sampik REQUIRED)
+endif()
+
+add_executable(send_recv)
+target_sources(send_recv PRIVATE send_recv.test.cpp)
+target_link_libraries(send_recv PRIVATE sampik::sampik)
 
 add_test(NAME send_recv COMMAND mpirun -np 2 send_recv)
-
-find_package(KokkosKernels REQUIRED)
-
-add_executable(dist_matvec dist_matvec.cpp)
-target_link_libraries(dist_matvec PRIVATE sampik::sampik Kokkos::kokkos Kokkos::kokkoskernels MPI::MPI_CXX)
-
-add_test(NAME dist_matvec COMMAND mpirun -np 4 dist_matvec)

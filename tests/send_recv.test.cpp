@@ -16,7 +16,7 @@
  * out of or in connection with the software or the use or other dealings
  * in the software.
  *
- * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
+ * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr>
  **/
 
 #include <sampik/sampik.hpp>
@@ -91,10 +91,10 @@ auto main(int argc, char* argv[]) -> int {
 
       // Receive result from rank 1
       MPI_Recv(
-        &res_other, 1, Sampik::Impl::mpi_type_v<ScalarType>, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE
+        &res_other, 1, Sampik::detail::mpi_type_v<ScalarType>, 1, 1, MPI_COMM_WORLD, MPI_STATUS_IGNORE
       );
       // Send local result to rank 1
-      MPI_Send(&res_local, 1, Sampik::Impl::mpi_type_v<ScalarType>, 1, 2, MPI_COMM_WORLD);
+      MPI_Send(&res_local, 1, Sampik::detail::mpi_type_v<ScalarType>, 1, 2, MPI_COMM_WORLD);
     } else {
       // Receive initialized view from rank 0
       Sampik::recv(v, 0, 0, MPI_COMM_WORLD);
@@ -108,10 +108,10 @@ auto main(int argc, char* argv[]) -> int {
       );
 
       // Send local reduction result to rank 0
-      MPI_Send(&res_local, 1, Sampik::Impl::mpi_type_v<ScalarType>, 0, 1, MPI_COMM_WORLD);
+      MPI_Send(&res_local, 1, Sampik::detail::mpi_type_v<ScalarType>, 0, 1, MPI_COMM_WORLD);
       // Receive result from rank 0
       MPI_Recv(
-        &res_other, 1, Sampik::Impl::mpi_type_v<ScalarType>, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE
+        &res_other, 1, Sampik::detail::mpi_type_v<ScalarType>, 0, 2, MPI_COMM_WORLD, MPI_STATUS_IGNORE
       );
     }
 
