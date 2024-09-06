@@ -16,7 +16,7 @@
  * out of or in connection with the software or the use or other dealings
  * in the software.
  *
- * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
+ * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr>
  **/
 
 #pragma once
@@ -26,7 +26,8 @@
 #include <cstdint>
 #include <type_traits>
 
-namespace Sampik::Impl {
+namespace sampik::detail {
+
 template <typename T>
 inline auto mpi_type() -> MPI_Datatype {
   static_assert(std::is_void_v<T>, "unimplemented MPI type");
@@ -105,4 +106,5 @@ inline auto mpi_type<long double>() -> MPI_Datatype {
 
 template <typename T>
 inline MPI_Datatype mpi_type_v = mpi_type<T>();
-} // namespace Sampik::Impl
+
+} // namespace sampik::detail

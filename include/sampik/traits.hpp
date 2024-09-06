@@ -16,7 +16,7 @@
  * out of or in connection with the software or the use or other dealings
  * in the software.
  *
- * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
+ * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr>
  **/
 
 #pragma once

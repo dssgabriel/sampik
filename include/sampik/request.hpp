@@ -21,19 +21,33 @@
 
 #pragma once
 
-#include <sampik/impl/communication_spaces.hpp>
+#include <sampik/detail/communication_spaces.hpp>
+#include <sampik/concepts.hpp>
 
-#include <Kokkos_Core.hpp>
+#include <mpi.h>
 
 namespace sampik {
 
-template <typename T>
-concept KokkosView = Kokkos::is_view_v<T>;
+using RankId = int;
 
-template <typename T>
-concept KokkosExecSpace = Kokkos::is_execution_space_v<T>;
+template <CommunicationSpace CommSpace>
+class Request {};
 
-template <typename T>
-concept CommunicationSpace = sampik::is_communication_space_v<T>;
+template <>
+class Request<MpiCommunicationSpace> {
+ public:
+  using ReqType = MpiCommunicationSpace::RequestType;
+
+  Request(ReqType req) : _req(req) {}
+
+  constexpr auto get_inner() -> ReqType {
+    return _req;
+  }
+
+ private:
+  ReqType _req;
+};
+
+Request(MPI_Request) -> Request<MpiCommunicationSpace>;
 
 } // namespace sampik

@@ -16,14 +16,15 @@
  * out of or in connection with the software or the use or other dealings
  * in the software.
  *
- * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr, dss.gabriel@protonmail.com>
+ * Author: Gabriel Dos Santos <gabriel.dossantos@cea.fr>
  **/
 
 #pragma once
 
-#include <new>
-#include <sampik/impl/communication_spaces.hpp>
+#include <sampik/detail/communication_spaces.hpp>
 #include <sampik/concepts.hpp>
+
+#include <mpi.h>
 
 namespace sampik {
 
@@ -33,7 +34,7 @@ template <CommunicationSpace CommSpace, KokkosExecSpace ExecSpace>
 class CommHandle {};
 
 template <KokkosExecSpace ExecSpace>
-class CommHandle<MpiCommunicationSpace> {
+class CommHandle<MpiCommunicationSpace, ExecSpace> {
  public:
   using HandleType = MpiCommunicationSpace::CommunicatorType;
 
@@ -41,20 +42,20 @@ class CommHandle<MpiCommunicationSpace> {
 
   ~CommHandle() {
     if (_comm != MPI_COMM_WORLD && _comm != MPI_COMM_SELF && _comm != MPI_COMM_NULL) {
-      MPI_Comm_free(_comm);
+      MPI_Comm_free(&_comm);
     }
   }
 
-  static auto split(HandleType comm, ExecSpace const&) -> CommHandle {
+  static auto split(HandleType comm, int color, int key, ExecSpace const&) -> CommHandle {
     HandleType new_comm{};
-    MPI_Comm_split(&new_comm, comm);
-    return CommHandle<ExecSpace>(new_comm);
+    MPI_Comm_split(comm, color, key, &new_comm);
+    return CommHandle<MpiCommunicationSpace, ExecSpace>(new_comm);
   }
 
   static auto duplicate(HandleType comm, ExecSpace const&) -> CommHandle {
     HandleType new_comm{};
-    MPI_Comm_dup(&new_comm, comm);
-    return CommHandle<ExecSpace>(new_comm);
+    MPI_Comm_dup(comm, &new_comm);
+    return CommHandle<MpiCommunicationSpace, ExecSpace>(new_comm);
   }
 
   auto rank() -> RankId {
@@ -78,8 +79,9 @@ class CommHandle<MpiCommunicationSpace> {
 };
 
 template <KokkosExecSpace ExecSpace>
-CommHandle(MPI_Comm, ExecSpace) -> CommHandle<MpiCommunicationSpace, ExecSpace>;
+CommHandle(MPI_Comm, ExecSpace const&) -> CommHandle<MpiCommunicationSpace, ExecSpace>;
 
+#if defined(SAMPIK_ENABLE_NCCL)
 template <KokkosExecSpace ExecSpace>
 class CommHandle<NcclCommunicationSpace> {
  public:
@@ -109,5 +111,6 @@ class CommHandle<NcclCommunicationSpace> {
 
 template <KokkosExecSpace ExecSpace>
 CommHandle(ncclComm_t, ExecSpace) -> CommHandle<NcclCommunicationSpace, ExecSpace>;
+#endif
 
 }
